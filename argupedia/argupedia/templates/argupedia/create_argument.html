@@ -1,0 +1,22 @@
+
+{% block content %}
+
+<html>
+    <body>
+        {% include 'argupedia\nav.html' %}
+        <div class= "container-fluid d-flex justify-content-center">
+            <form action = "{% url 'add_argument' %}" method= "post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="exampleInput">Argument Title</label>
+                    <input type="text" class="form-control" name= "titleArgument" aria-describedby="emailHelp" placeholder="Title">
+                </div>
+                <br>
+                <button type="submit" class="btn btn-primary justify-content-center">Log in</button>
+            </form>
+        </div>
+    </body>
+</html>
+
+
+{%  endblock %}

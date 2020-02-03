@@ -1,0 +1,46 @@
+{% load bootstrap4 %}
+{% load static %}
+
+{% block content %}
+
+
+
+<head>
+    <title>Register</title>
+</head>
+<body>
+  {% include 'argupedia\nav.html' %}
+  <div class= "container-fluid d-flex justify-content-center">
+    <form action = "{% url 'post_register' %}" method= "post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="exampleInput">First Name</label>
+        <input type="text" class="form-control" name= "fName" aria-describedby="emailHelp" placeholder="First Name">
+      </div>
+      <div class="form-group">
+        <label for="exampleInput">Last Name</label>
+        <input type="text" class="form-control" name= "lName" aria-describedby="emailHelp" placeholder="Last Name">
+      </div>
+      <div class="form-group">
+        <label for="exampleInput">Username</label>
+        <input type="text" class="form-control" name= "username" aria-describedby="emailHelp" placeholder="Choose a username">
+        <small id="usernameHelp" class="form-text text-muted">This will be viewable by the public</small>
+      </div>
+      <div class="form-group">
+        <label for="exampleInputEmail1">Email address</label>
+        <input type="email" class="form-control" id="exampleInputEmail1" name= "email" aria-describedby="emailHelp" placeholder="Enter email">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Password</label>
+        <input type="password" class="form-control" name="password" id="exampleInputPassword1" placeholder="Password">
+      </div>
+      <br>
+      <button type="submit" class="btn btn-primary justify-content-center">Register</button>
+    </form>
+  </div>
+
+</body>
+
+
+
+{%  endblock %}
