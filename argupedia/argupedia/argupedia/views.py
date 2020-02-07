@@ -27,11 +27,6 @@ def home_page(request):
     template_name = 'argupedia/index.html'
     return render(request, template_name, context)
 
-def create_argument_page(request):
-    context = {"title": "Create Argument"}
-    template_name = 'argupedia/create_argument.html'
-    return render(request, template_name, context)
-
 
 #check if logged in
 def logged_in(request):
@@ -42,10 +37,6 @@ def logged_in(request):
     except:
         print("no")
         return False
-
-
-
-
 
 
 #Register
@@ -87,8 +78,11 @@ def post_login(request):
     password = request.POST.get('password')
     try:
         user = authF.sign_in_with_email_and_password(email, password)
+        print(user)
+        print()
         session_id = user['idToken']
         request.session['uid'] = str(session_id)
+        print(request.session['uid'])
     except:
         context = {"message":"invalid credentials"}
         template_name = 'argupedia/login.html'
@@ -96,6 +90,7 @@ def post_login(request):
     context = {"e": email}
     template_name = 'argupedia/login_success.html'
     return render(request, template_name, context)
+
 
 def log_out(request):
     try:
@@ -111,8 +106,7 @@ def add_argument(request):
     title = request.POST.get('titleArgument')
     print("called me!!!")
     try:
-        test = authF.get_user(uid)
-        print (test)
+        #test = authF.get_user(uid)
         userID = authF.currentUser().getIdToken()
         print(userID)
         db.child("users").child(userID).child("arguments").push(title)
@@ -123,3 +117,13 @@ def add_argument(request):
     context = {"e": "YES SUBMITTED"}
     template_name = 'argupedia/login_success.html'
     return render(request, template_name, context)
+
+def create_argument_page(request):
+    context = {"title": "Create Argument"}
+    template_name = 'argupedia/create_argument.html'
+    if request.session.has_key('uid'):
+      uid = request.session['uid']
+      username = db.child("users").child(uid).child("username")
+      return render(request, template_name, {"uid" : username})
+    else:
+      return render(request, template_name, {"uid" : None})

@@ -1,20 +1,31 @@
 
+
 {% block content %}
 
 <html>
     <body>
         {% include 'argupedia\nav.html' %}
+
+        {% if uid is None %}
+
         <div class= "container-fluid d-flex justify-content-center">
-            <form action = "{% url 'add_argument' %}" method= "post">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="exampleInput">Argument Title</label>
-                    <input type="text" class="form-control" name= "titleArgument" aria-describedby="emailHelp" placeholder="Title">
-                </div>
-                <br>
-                <button type="submit" class="btn btn-primary justify-content-center">Log in</button>
-            </form>
+
+            Sorry, You need to log in first to create an argument
+
         </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'login_page' %}">Log In</a>
+        </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'register_page' %}">Register</a>
+        </div>
+
+        {% else %}
+
+        Welcome {{uid}}
+
+        {%endif%}
+
     </body>
 </html>
 
