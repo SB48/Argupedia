@@ -1,0 +1,27 @@
+
+{% block content %}
+
+<html>
+    <body>
+        {% include 'argupedia\nav.html' %}
+
+
+        {% if arguments is None %}
+        <div class= "container-fluid d-flex justify-content-center">
+
+            Your search did not come up with any results. Start the debate yourself!
+
+        </div>
+        <br>
+            <div class= "container-fluid d-flex justify-content-center">
+                <a class="button" href="{% url 'search_argument_page' %}">Start a Debate</a>
+            </div>
+        {% else %}
+            {% include 'argupedia\cards.html' %}
+        {% endif %}
+
+    </body>
+</html>
+
+
+{%  endblock %}
