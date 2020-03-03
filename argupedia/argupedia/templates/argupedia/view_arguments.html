@@ -1,0 +1,43 @@
+{% block content %}
+
+<html>
+    <body>
+        {% include 'argupedia\nav.html' %}
+
+
+        {% if uid is None %}
+
+        <div class= "container-fluid d-flex justify-content-center">
+
+            Sorry, You need to log in first to create an argument
+
+        </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'login_page' %}">Log In</a>
+        </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'register_page' %}">Register</a>
+        </div>
+
+        {% elif arguments is None %}
+
+        <div class= "container-fluid d-flex justify-content-center">
+
+            You have no arguments yet!
+
+        </div>
+
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'search_argument_page' %}">Back</a>
+        </div>
+
+        {%else%}
+
+        {% include 'argupedia\cards.html' %}
+        
+        {%endif%}
+
+    </body>
+</html>
+
+{%  endblock %}

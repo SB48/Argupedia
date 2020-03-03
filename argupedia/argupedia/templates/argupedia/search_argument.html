@@ -1,0 +1,64 @@
+
+
+{% block content %}
+
+<html>
+    <body>
+        {% include 'argupedia\nav.html' %}
+
+        {% if uid is None %}
+
+        <div class= "container-fluid d-flex justify-content-center">
+
+            Sorry, You need to log in first to create an argument
+
+        </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'login_page' %}">Log In</a>
+        </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'register_page' %}">Register</a>
+        </div>
+
+        {% else %}
+        <div class= "container-fluid d-flex justify-content-center">
+            Welcome {{uid}}
+            <br>
+            Would you like to submit a response (attack or defense) of an existing argument?
+            Check if the topic you're interested in exists already:
+        </div>
+        <br>
+        <br>
+        <!-- Both of the following buttons perform the same function in enforcing that the user searches for a topic before creating 
+        a new debate. If they search for a topic and no results turn up, then they are prompted to start one -->
+        
+        <div class= "container-fluid d-flex justify-content-center">
+            Search for Existing Arguments:
+        </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <form class="form-inline my-2 my-lg-0">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </div>
+        <br>
+        <div class= "container-fluid d-flex justify-content-center">
+            Start a new Debate Here:
+        </div>
+        <div class= "container-fluid d-flex justify-content-center">
+            <form class="form-inline my-2 my-lg-0" action = "{% url 'create_argument_page' %}" method= "post">
+                {% csrf_token %}
+                <input class="form-control mr-sm-2" name="argumentTopic" type="search" placeholder="Argument Topic" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Submit</button>
+            </form>
+        </div>
+
+        {%endif%}
+
+    </body>
+</html>
+
+
+
+
+{%  endblock %}
