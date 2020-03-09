@@ -71,7 +71,7 @@ def post_register(request):
         context = {"message": "There was an error creating your account"}
         template_name = 'argupedia/register.html'
         return render(request, template_name, context)
-    context = {"e": email}
+    context = {"e": "Welcome {}".format(email)}
     template_name = 'argupedia/login_success.html'
     return render(request, template_name, context)
 
@@ -96,7 +96,7 @@ def post_login(request):
         context = {"message":"invalid credentials"}
         template_name = 'argupedia/login.html'
         return render(request, template_name, context )
-    context = {"e": email}
+    context = {"e": "Welcome {}".format(email)}
     template_name = 'argupedia/login_success.html'
     return render(request, template_name, context)
 
@@ -122,11 +122,13 @@ def add_argument(request):
         "content": request.POST.get('content'), 
         "urlReference": request.POST.get('urlReference'),
         "fileReference": request.POST.get('fileReference'),
-        "image": request.POST.get('image')
+        "image": request.POST.get('image'),
+        "argumentType" : request.POST.get('argumentType')
     }
     fileRef =  request.POST.get('fileReference')
     image = request.POST.get('image')
-    if db.add_argument(data, fileRef, image) is None: 
+    passCheck = db.add_argument(data, fileRef, image)
+    if passCheck is None: 
         context = {"message": "Error"}
         template_name = 'argupedia/create_argument.html'
         return render(request, template_name, context)
@@ -135,7 +137,7 @@ def add_argument(request):
         # print(userID)
         # dbF.child("users").child(userID).child("arguments").push(data)
     else:
-        context = {"e": "Your argument has been successfully submitted"}
+        context = {"e": "Your argument {} has been successfully submitted".format(passCheck)}
         template_name = 'argupedia/login_success.html'
         return render(request, template_name, context)
 
@@ -153,7 +155,11 @@ def create_argument_page(request):
     #LATER IMPLEMENTATION - search and check if argument exists
     return render(request, template_name, {"topic" : topic, "uid": uid})
 
+#to delete comment: unsure when this function is used
 def view_arguments_page(request):
+    print("")
+    print("view arguments page called")
+    print("")
     template_name = 'argupedia/view_arguments.html'
     uid = db.return_uid()
     argument = db.return_arguments()
@@ -163,7 +169,7 @@ def view_arguments_page(request):
     # return render(request, template_name, toReturn)
     #end of testing segment!!
 
-    #uncmment the following after testing:
+    #uncomment the following after testing:
     toReturn = {"uid" : uid, "arguments" : argument}
     if argument is not None:
         toReturn = {"uid" : uid, "arguments" : argument}
@@ -174,15 +180,88 @@ def view_arguments_page(request):
     else:
         return render(request, template_name, {"uid" : uid, "arguments": None})
 
+def view_argument_schema_page(request):
+    print("viewing schema")
+    originalKey = request.POST.get('key')
+    arguments = db.return_schema(originalKey)
+    template_name = 'argupedia/view_schema.html'
+    if arguments is not None:
+        context = {"originalKey": originalKey, "arguments": arguments, "schema" : True}
+    else: 
+        context = {"originalKey": originalKey, "arguments": None, "schema" : True}
+    return render(request, template_name, context)
+
 def search_argument_nav_page(request):
     search = request.POST.get('searchTerm')
     template_name = 'argupedia/search_results.html'
     results = db.search_arguments(search)
     context = {"arguments": results}
+    print("in views page",results)
     return render(request, template_name, context)
-    # if bool(context):
-    #     return render(request, template_name, {"arguments": ""})
-    # else:
+
+def critical_questions_page(request):
+    topic = request.POST.get('topic')
+    key = request.POST.get('key')
+    originalKey = request.POST.get('originalKey')
+    uid = db.return_uid()
+    criticalQuestions = db.return_criticalQuestions(key)
+    context = {"uid": uid, "topic": topic, "key": key, "originalKey": originalKey, "criticalQuestions": criticalQuestions}
+    template_name = 'argupedia/critical_questions.html'
+    #testing values: @@@@@@@@@@@@
+    # topic = "Abortion"
+    # key = "-M1v_Wu7l6mpOYEha1fU"
+    # uid = "IdZbjSY6RmeUDhgsLZaPA1bv9OI2"
+    # criticalQuestions = db.return_criticalQuestions(key)
+    # context = {"uid": uid, "topic": topic, "key": key, "criticalQuestions": criticalQuestions}
+    #end of testing values @@@@@@@@@@@@@@@
+    return render(request, template_name, context)
+    
+
+
+#adds an attacking argument 
+def add_attack(request):
+    print("called add attack in views")
+    originalKey = request.POST.get('originalKey')
+    print("original key", originalKey)
+    if request.POST.get('alternate') is None:
+        alternate = False
+    else: 
+        alternate = True
+
+    # attackingKeys =  {}
+    # for element in request.POST.get('attackingKey'):
+    #     attackingKeys[element] = "attacking"
+    data = {
+        "topic": request.POST.get('topic'),
+        "title" : request.POST.get('title'),
+        "content": request.POST.get('content'), 
+        "urlReference": request.POST.get('urlReference'),
+        "fileReference": request.POST.get('fileReference'),
+        "image": request.POST.get('image'),
+        "argumentType" : request.POST.get('argumentType'),
+        "criticalQuestion": request.POST.get('criticalQuestion'),
+        "attacking": [request.POST.get('attackingKey')],
+        "attackedBy": "",
+        "alternate" : alternate
+    }
+
+    print ("checkbox return value, ", data["alternate"])
+    fileRef =  request.POST.get('fileReference')
+    image = request.POST.get('image')
+    passCheck = db.add_attack(data, originalKey, fileRef, image)
+    if passCheck is None: 
+        context = {"message": "Error"}
+        template_name = 'argupedia/create_argument.html'
+        return render(request, template_name, context)
+        #userID = authF.currentUser().getIdToken()
+        # userID = db.return_uid()
+        # print(userID)
+        # dbF.child("users").child(userID).child("arguments").push(data)
+    else:
+        context = {"e": "Your argument {} has been successfully submitted".format(passCheck)}
+        template_name = 'argupedia/login_success.html'
+        return render(request, template_name, context)
+
 
 
 

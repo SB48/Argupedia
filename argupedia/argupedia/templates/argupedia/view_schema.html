@@ -1,0 +1,16 @@
+{% block content %}
+
+<html>
+    <body>
+        {% include 'argupedia\nav.html' %}
+        <h2>Choose an argument to attack</h2>
+
+        {{originalKey}}
+
+        {% include 'argupedia\cards.html' %}
+        
+
+    </body>
+</html>
+
+{%  endblock %}

@@ -17,6 +17,30 @@
               {% if value.urlReference != "" %}
                 <a href={{value.urlReference}} class="card-link">URL Reference</a>
               {% endif %}
+              <div class="dropdown-divider"></div>
+              originalKey: {{originalKey}}
+              key: {{key}}
+              <!-- <a href="{% url 'critical_questions_page' %}" style="color:black;" class="card-link">Add a Critical Question</a> -->
+              {% if schema == True %}
+              <!-- schema has been viewed, now user chooses which argument to attack -->
+              <form action="{% url 'critical_questions_page' %}" method="post">
+                {% csrf_token %}
+                <input name="originalKey" type="hidden" value="{{originalKey}}"></input>
+                <input name="key" type="hidden" value="{{key}}"></input>
+                <input name="topic" type="hidden" value="{{value.topic}}"></input>
+                <input type="submit" value="Add a Critical Question"></input>
+              </form>
+              {% else %}
+               <!-- schema has not been viewed  -->
+               <form action="{% url 'view_argument_schema_page' %}" method="post">
+                {% csrf_token %}
+                <input name="originalKey" type="hidden" value="{{Key}}"></input>
+                <input name="key" type="hidden" value="{{key}}"></input>
+                <input name="topic" type="hidden" value="{{value.topic}}"></input>
+                <input type="submit" value="View Schema"></input>
+              </form>
+              {% endif %}
+
             </div>
           </div>
     </div>
