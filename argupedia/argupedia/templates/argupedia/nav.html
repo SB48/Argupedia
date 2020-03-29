@@ -18,48 +18,98 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 </head>
 <style>
-    body{
-      background-color:#dbecff;
+    @media (min-width:600px) {
+      .text {
+        font-size: 18px;
+      }
     }
+    /* reference: https://css-tricks.com/books/fundamental-css-tactics/scale-typography-screen-size/ */
+    @media (min-width:1000px) {
+      .text {
+        /* Never get larger than this */
+        font-size: 20px;
+      }
+    }
+
+    body {
+      background-color:#E8F8FF;
+    }
+    .text {
+      color:#B4DCED;
+    }
+    .dropdown {
+      background-color:#3399CC;
+    }
+
+    .title-text{
+      color:#B4DCED;
+    }
+    .dropdown-toggle::after {
+      color:#049DBF;
+    }
+
+    .dropdown-menu {
+      background-color:#3399CC
+    }
+
+    .navButton{
+      border-color: #B4DCED;
+      color: #B4DCED;
+    }
+
+    .navButton:hover {
+      background-color: #B4DCED;
+      color: #3399CC;
+    }
+
+    
 </style>
+<!-- reference: https://color.adobe.com/explore?page=3 
+  https://color.adobe.com/explore?page=2
+-->
 
-
-<nav class="navbar navbar-expand-lg navbar-light" style= "background-color: #9dc7f5;">
-    <a class="navbar-brand" href="{% url 'home_page' %}">Argupedia</a>
+<nav class="navbar navbar-expand-lg navbar-light" style= "background-color: #3399CC ">
+    <a class="navbar-brand" href="{% url 'home_page' %}"><div class = "text"> Argupedia</div></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item active">
-          <a class="nav-link" href="{% url 'home_page' %}">Home <span class="sr-only">(current)</span></a>
+          <a class="nav-link" href="{% url 'home_page' %}"><div class = "text"> Home</div> <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="{% url 'about_page' %}"><div class = "text"> About</div> </a>
         </li>
         <li class="nav-item dropdown" >
             <a class="nav-link dropdown-toggle"  href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Your Contributions
+                <div class = "text"> Your Contributions</div>
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="{% url 'view_arguments_page' %}">View your arguments</a>
-                <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{% url 'search_argument_page' %}">Start a Debate</a>
+                <a class="dropdown-item" href="{% url 'view_arguments_page' %}"><div class = "text"> View your arguments</div></a>
+                <!-- <div class="dropdown-divider"></div> -->
+                <a class="dropdown-item" href="{% url 'search_argument_page' %}"><div class = "text"> Start a debate</div></a>
             </div>
           </li>
 
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Account
+            <div class = "text"> Account</div>
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <a class="dropdown-item" href="{% url 'register_page' %}">Register</a>
-            <a class="dropdown-item" href="{% url 'login_page' %}">Log In</a>
-            <a class="dropdown-item" href="{% url 'log_out' %}">Log Out</a>
+            {% if uid is None %}
+              <a class="dropdown-item" href="{% url 'register_page' %}"><div class = "text"> Register</div></a>
+              <a class="dropdown-item" href="{% url 'login_page' %}"><div class = "text"> Log In</div></a>
+            {% else %}
+              <a class="dropdown-item" href="{% url 'log_out' %}"><div class = "text"> Log Out</div></a>
+            {% endif %}
           </div>
         </li>
       </ul>
       <form action = "{% url 'search_argument_nav_page' %}"  class="form-inline my-2 my-lg-0" method= "post">
         {% csrf_token %}
         <input class="form-control mr-sm-2" name="searchTerm"  type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        <button class="btn navButton my-2 my-sm-0" type="submit">Search</button>
       </form>
     </div>
   </nav>

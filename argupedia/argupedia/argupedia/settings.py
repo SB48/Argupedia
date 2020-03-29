@@ -36,7 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bootstrap4',
     'pyrebase',
+    'django_popup_view_field',
 ]
+
+DJANGO_POPUP_VIEW_FIELD_TEMPLATE_PACK = 'bootstrap4'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

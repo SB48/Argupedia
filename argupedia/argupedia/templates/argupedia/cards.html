@@ -1,49 +1,162 @@
+{% load django_popup_view_field_tags %}
+<style>
+  p {
+     width: 200px;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+  }
+
+  .container-fluid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.card {
+  /* flex-grow: 1;
+  flex-basis: 300px; */
+  width: 22rem;
+  margin: 10px;
+}
 
 
+</style>
+<script>
+  $(document).on("click", ".open-view-argument", function () {
+     var content = $(this).data('content');
+     $(".modal-body #content").val( content );
+});
+  open-view-argument
+</script>
 <div class= "container-fluid">
+
     {% for key, value in arguments.items %}
-    <div class= "d-flex justify-content-center">
-        <div class="card mb-3" style="width: 18rem;">
-            {% if value.image != "" or not None %}
-                <img src={{value.image}} class="card-img-top" alt="...">
-            {% endif %}
-            <div class="card-body">
-              <h5 class="card-title">{{value.title}}</h5>
-              <h6 class="card-subtitle mb-2 text-muted">{{value.topic }}</h6>
-              <p class="card-text">{{value.content}}</p>
+    <div class = "col-6">
+      
+      <div class= "d-flex container justify-content-center">
+          <div class="card mb-3" style="width: 18rem;">
+              {% if value.image != "" %} 
+                  <img src={{value.image}} class="card-img-top" alt="...">
+              {% endif %}
+
+              {% if value.labellings.in == True %}
+                <div align="right"> <i> in </i> </div>
+              {% elif value.labellings.out == True %}
+                <div align="right"> <i> out </i> </div>
+              {% elif value.labellings.undec == True %}
+              <div align="right"> <i> undecided </i> </div>
+              {% endif %}
+
+              <div class="card-body">
+                <h5 class="card-title">{{value.title}} </h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{value.topic }}</h6>
+                <p class="card-text">{{value.content}}</p>
+                {% if value.fileReference != "" %}
+                  <a href={{value.fileReference}} class="card-link">File Reference</a>
+                {% endif %}
+                {% if value.urlReference != "" %}
+                  <a href={{value.urlReference}} class="card-link">URL Reference</a>
+                {% endif %}
+                <div class="dropdown-divider"></div>
+                <!-- <button type="button" class="btn btn-primary open-view-argument" data-content={{content}} data-toggle="modal" data-target="#exampleModalCenter">
+                  Launch demo modal
+                </button> -->
+                <form action="{% url 'view_argument_info_page' %}" method="post">
+                  {% csrf_token %}
+                  <input name="content" type="hidden" value="{{value.content}}"></input>
+                  <input name="fileReference" type="hidden" value="{{value.fileReference}}"></input>
+                  <input name="urlReference" type="hidden" value="{{value.urlReference}}"></input>
+                  <input name="title" type="hidden" value="{{value.title}}"></input>
+                  <input name="labellings" type="hidden" value="{{value.labellings}}"></input>
+                  <input type="submit" class="btn btn-light" data-toggle="modal" data-target="#exampleModalCenter" value="View Argument"></input>
+                </form>
+                <!-- originalKey: {{originalKey}}
+                key: {{key}} -->
+                <!-- <a href="{% url 'critical_questions_page' %}" style="color:black;" class="card-link">Add a Critical Question</a> -->
+                {% if schema == True %}
+                <!-- schema has been viewed, now user chooses which argument to attack -->
+                <form action="{% url 'critical_questions_page' %}" method="post">
+                  {% csrf_token %}
+                  {{value.originalKey }}
+                  {% if value.originalKey is None %}
+                  <input name="originalKey" type="hidden" value="{{key}}"></input>
+                  {% else %}
+                  <input name="originalKey" type="hidden" value="{{value.originalKey}}"></input>
+                  {% endif %}
+                  <input name="key" type="hidden" value="{{key}}"></input>
+                  <input name="topic" type="hidden" value="{{value.topic}}"></input>
+                  <input type="submit" class="btn btn-light" value="Add a Critical Question"></input>
+                </form>
+                {% else %}
+                <!-- schema has not been viewed  -->
+                <form action="{% url 'view_argument_schema_page' %}" method="post">
+                  {% csrf_token %}
+                  <input name="originalKey" type="hidden" value="{{value.originalKey}}"></input>
+                  <input name="key" type="hidden" value="{{key}}"></input>
+                  <input name="topic" type="hidden" value="{{value.topic}}"></input>
+                  <input type="submit"class="btn btn-light" value="View Schema"></input>
+                </form>
+                {% endif %}
+
+              </div>
+            </div>
+      </div>
+      <br>
+    </div>
+
+
+
+<!-- 
+    <div class="modal fade bd-example-modal-lg" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">{{value.title }}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+  
+          <div class="modal-body">
+            hi pls show this is working
+            <input type="text" name="content" id="content" value=""/>
+            {{value.content}}
+            <br>
+            <br>
+  
+            {% if value.fileReference != "" or value.urlReference != "" %}
+              <h6>References</h6>
               {% if value.fileReference != "" %}
-                <a href={{value.fileReference}} class="card-link">File Reference</a>
+                <a href="{{value.fileReference}}" class="tooltip-test" title="fileRef">File Reference</a>
               {% endif %}
               {% if value.urlReference != "" %}
-                <a href={{value.urlReference}} class="card-link">URL Reference</a>
+                <a href="{{value.urlReference}}" class="tooltip-test" title="URLRef">Link Reference</a>
               {% endif %}
-              <div class="dropdown-divider"></div>
-              originalKey: {{originalKey}}
-              key: {{key}}
-              <!-- <a href="{% url 'critical_questions_page' %}" style="color:black;" class="card-link">Add a Critical Question</a> -->
-              {% if schema == True %}
-              <!-- schema has been viewed, now user chooses which argument to attack -->
-              <form action="{% url 'critical_questions_page' %}" method="post">
-                {% csrf_token %}
-                <input name="originalKey" type="hidden" value="{{originalKey}}"></input>
-                <input name="key" type="hidden" value="{{key}}"></input>
-                <input name="topic" type="hidden" value="{{value.topic}}"></input>
-                <input type="submit" value="Add a Critical Question"></input>
-              </form>
-              {% else %}
-               <!-- schema has not been viewed  -->
-               <form action="{% url 'view_argument_schema_page' %}" method="post">
-                {% csrf_token %}
-                <input name="originalKey" type="hidden" value="{{Key}}"></input>
-                <input name="key" type="hidden" value="{{key}}"></input>
-                <input name="topic" type="hidden" value="{{value.topic}}"></input>
-                <input type="submit" value="View Schema"></input>
-              </form>
-              {% endif %}
-
-            </div>
+            {% endif %}
+  
+            {% if value.labellings.undec == True and uid is not None %}
+              This argument is undecided. 
+              If it receives enough votes then it will be considered "winning" over the argument that attacks it. 
+              Alternatively, you could vote for the other undecided argument
+            {% endif %}
+  
           </div>
-    </div>
-    <br>
-    {% endfor %}
+  
+          <div class="modal-footer">
+            {% if value.labellings.undec == True and uid is not None %}
+            <button type="button" class="btn btn-light" data-dismiss="modal">Vote For This Argument</button>
+            {% endif %}
+            <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>  -->
+
+
+
+
+  {% endfor %}
+
+
+
 </div>

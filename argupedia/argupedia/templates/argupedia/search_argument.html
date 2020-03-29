@@ -36,22 +36,35 @@
             Search for Existing Arguments:
         </div>
         <div class= "container-fluid d-flex justify-content-center">
-            <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-            </form>
+            <form action = "{% url 'search_argument_nav_page' %}"  class="form-inline my-2 my-lg-0" method= "post">
+                {% csrf_token %}
+                <input class="form-control mr-sm-2" name="searchTerm"  type="search" placeholder="Search" aria-label="Search">
+                <button class="btn navButton my-2 my-sm-0" type="submit">Search</button>
+              </form>
         </div>
         <br>
         <div class= "container-fluid d-flex justify-content-center">
-            Start a new Debate Here:
+            Start a new Debate Here. Choose Your argument type:
         </div>
         <div class= "container-fluid d-flex justify-content-center">
+            <form action = "{% url 'create_argument_page' %}" class="form-inline my-2 my-lg-0"  method= "post">
+                {% csrf_token %}
+                <select id="argumentType" name="argumentType">
+                    {% for type, description in types.items %}
+                    <option value="{{type}}">{{description}}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Submit</button>
+            </form>
+        </div>
+
+        <!-- <div class= "container-fluid d-flex justify-content-center">
             <form class="form-inline my-2 my-lg-0" action = "{% url 'create_argument_page' %}" method= "post">
                 {% csrf_token %}
                 <input class="form-control mr-sm-2" name="argumentTopic" type="search" placeholder="Argument Topic" aria-label="Search">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Submit</button>
             </form>
-        </div>
+        </div> -->
 
         {%endif%}
 

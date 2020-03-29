@@ -4,7 +4,7 @@
     <body>
         {% include 'argupedia\nav.html' %}
 
-        {% if topic is None or uid is None %}
+        {% if uid is None %}
 
         <div class= "container-fluid d-flex justify-content-center">
 
@@ -19,7 +19,7 @@
 
           <div class="container-fluid justify-content-center">
             <div class="header">
-              <h2>{{topic}}</h2>
+              <h2>Create Your Argument</h2>
             </div>
             <br>
             <form action = "{% url 'add_argument' %}" method= "post">
@@ -27,7 +27,7 @@
               <div class="form-group row">
                 <label for="Category" class="col-sm-2 col-form-label">Change Topic Header</label>
                 <div class="col-sm-10">
-                  <input type="text" class="form-control" name="topic" placeholder={{topic}}>
+                  <input type="text" class="form-control" name="topic" placeholder="Subject Domain">
                 </div>
               </div>
               <div class="form-group row">
@@ -36,44 +36,25 @@
                   <input class="form-control input-sm" name="title" type="text" placeholder="e.g. X is immoral because of Y">
                 </div>
               </div>
-              <div class="row">Please select your argument type</div>
-              <fieldset class="form-group row">
-                <div class="row">
-                  <legend class="col-form-label col-sm-2 pt-0">Types</legend>
-                  <div class="col-sm-10">
-                    <div class="form-check">
-                      <input type="radio" id="male" name="argumentType" value="positionToKnow">
-                      <label class="form-check-label" for="gridRadios1">
-                        Argument From Position To Know
-                      </label>
-                    </div>
-                    <div class="form-check">
-                      <input type="radio" id="male" name="argumentType" value="expertOpinion">
-                      <label class="form-check-label" for="gridRadios1">
-                        Appeal To Expert Opinion
-                      </label>
-                    </div>
-                    <div class="form-check">
-                      <input type="radio" id="male" name="argumentType" value="popularOpinion">
-                      <label class="form-check-label" for="gridRadios1">
-                        Appeal To Popular Opinion
-                      </label>
-                    </div>
-                    <div class="form-check">
-                      <input type="radio" id="male" name="argumentType" value="analogyAppeal">
-                      <label class="form-check-label" for="gridRadios1">
-                        Appeal From Analogy
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </fieldset>
-              <div class="form-group row green-border-focus">
-                <label for="exampleFormControlTextarea5" class="col-sm-2 col-form-label">Write Up Your Argument and Evidence Here</label>
-                <div class="col-sm-10">
-                  <textarea class="form-control" name="content" id="exampleFormControlTextarea5" rows="3" placeholder="Evidence shows that X can no longer be considered moral..."></textarea>
+              <div class="form-group row">
+                <label for="selfAttack" class = "col-sm-2"> Argument attacks itself</label><br>
+                <input type="checkbox" id="selfAttack" class = "col-sm-2" name="selfAttack" value="Bike">
+              </div>
+              <br>
+              <div class="form-group row">
+                <div class = "col">
+                  Now you can start to write up your argument in the format of the argument type you have already chosen.
                 </div>
               </div>
+              {% for inputEntry in format %}
+                <div class="form-group row green-border-focus">
+                  <label for="exampleFormControlTextarea5" class="col-sm-2 col-form-label">{{inputEntry}}</label>
+                  <div class="col-sm-10">
+                    <textarea class="form-control" name="content-{{forloop.counter}}" id="exampleFormControlTextarea5" rows="3" placeholder="{{inputEntry}}"></textarea>
+                  </div>
+                </div>
+              {% endfor %}
+              <br>
               <div class="form-group row">
                 <label for="url" class="col-sm-2 col-form-label">URL References</label>
                 <div class="col-sm-10">

@@ -3,9 +3,16 @@
 <html>
     <body>
         {% include 'argupedia\nav.html' %}
-        <h2>Choose an argument to attack</h2>
 
-        {{originalKey}}
+        {% if dot is not None %}
+        {% include 'argupedia\view_graph.html' %}
+        {% endif %}
+
+        <div class="container-fluid d-flex justify-content-center title-text">
+            <h4>Choose an argument to attack</h4>
+        </div>
+
+        <br>
 
         {% include 'argupedia\cards.html' %}
         

@@ -1,10 +1,15 @@
 {% block content %}
 
 <html>
+  <style>
+    .text-format{
+      margin-left: 2vw
+    }
+  </style>
     <body>
         {% include 'argupedia\nav.html' %}
 
-        {% if uid is None %}
+         <!-- if uid is None 
 
         <div class= "container-fluid d-flex justify-content-center">
 
@@ -15,11 +20,12 @@
         <div class= "container-fluid d-flex justify-content-center">
             <a class="button" href="{% url 'login_page' %}">Log in</a>
         </div>
-        {% else %}
-        topic: {{topic}}
-        key: {{key}}
+         else  -->
         originalKey: {{originalKey}}
-        uid: {{uid}}
+        <!-- topic: {{topic}}
+        key: {{key}}
+        
+        uid: {{uid}} -->
         <div class="container-fluid justify-content-center">
           <div class="header">
             <h2>{{topic}}</h2>
@@ -29,26 +35,44 @@
             {% csrf_token %}
             <input name="originalKey" type="hidden" value="{{originalKey}}"></input>
             <div class="form-group row">
-              <label for="Category" class="col-sm-2 col-form-label">Change Topic Header</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" name="topic" placeholder={{topic}}>
-              </div>
-            </div>
-            <div class="form-group row">
               <label for="inputsm" class="col-sm-2 col-form-label">Argument Summary / Title</label>
               <div class="col-sm-10">
                 <input class="form-control input-sm" name="title" type="text" placeholder="e.g. X is immoral because of Y">
               </div>
             </div>
-            <div class="row">An alternate argument not only attacks the original argument but is also attacked by it.</div>
             <div class="form-group row">
-              <input type="checkbox" id="vehicle1" name="alternate" value="Bike">
-              <label for="vehicle1"> Alternate Argument</label><br>
+              <label for="selfAttack" class = "col-sm-2"> Argument attacks itself</label><br>
+              <input type="checkbox" id="selfAttack" class = "col-sm-2" name="selfAttack" value="Bike">
             </div>
-            drop down form to choose which argument you would like to attack
+            <div class="form-group row text-format">
+              <div class = "col">
+                An alternate argument not only attacks the original argument but is also attacked by it.
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="alternate" class = "col-sm-2"> Alternate Argument</label><br>
+              <input type="checkbox" id="alternate" class = "col-sm-2" name="alternate">
+            </div>
+            <!-- Drop down form to choose which argument you would like to attack -->
             <input name="attackingKey" type="hidden" value="{{key}}"></input>
-            <div class="row">Please select the form of your critical question.</div>
+            <div class="row">
+              <div class = "col">
+                Please select the form of your critical question.
+              </div>
+            </div>
             <fieldset class="form-group row">
+              <label for="criticalQuestion2" class="col-sm-2 col-form-label">Types</label>
+              {% for question in criticalQuestions %}
+                <div class="col-sm-10">
+                  <input type="radio" name="criticalQuestion" id="criticalQuestion2" value={{loop.index}}>
+                  <label class="form-check-label" id="criticalQuestion2" for="gridRadios1">
+                    {{ question }}
+                    {{loop.index}}
+                  </label>
+                </div>
+              {% endfor %}
+            </fieldset>
+            <fieldset class="form-group row text-format">
               <div class="row">
                 <legend class="col-form-label col-sm-2 pt-0">Types</legend>
                 <div class="col-sm-10">
@@ -145,7 +169,7 @@
 
           
 
-        {%endif%}
+        <!-- endif -->
 
     </body>
 

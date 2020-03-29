@@ -4,8 +4,10 @@ from django.conf import settings
 from django.shortcuts import render
 from django.contrib import auth
 import pyrebase
+import random
 import numpy as np
 import pandas as pd 
+import json
 
 config = {
     'apiKey': "AIzaSyDTNvuZOGHUuuG1PTkBZOW64xdb9Ry5TWE",
@@ -61,21 +63,32 @@ class Database:
         else: 
             return None
     
-    
-    # def add_criticalQ(self, data):
-    #     if self.check_logged_in():
-    #         try:
-                
-    
-    # def add_attack(self, data):
-    #     if self.check_logged_in():
-    #         try:
+    def return_images(self):
+        print("return images called")
+        allTopics = db.child("topics").get()
+        topicsDF = pd.DataFrame(allTopics.val())
+        topics = topicsDF.to_dict()
+        toReturn = {}
+        for topic, topicInformation in topics.items():
+            print("")
+            print("exists? ", topicInformation['image'])
+            if topicInformation['image']:
+                print(topicInformation['image'])
+                if type(topicInformation['arguments']) is dict :
+                    argumentsDict = topicInformation['arguments']
+                    print ("argumentsDict", argumentsDict)
+                    print(type(argumentsDict))
+                    argument = random.choice(list(argumentsDict.keys()))
+                    print(argument)
+                    toReturn[argument] = topicInformation['image']
+        return toReturn
 
     # loop through argument schema under original key, altering labellings via which ones are being attacked
-    def change_labellings(self, originalKey, key, attackingKeys, alternate):
+    def change_labellings(self, originalKey, key, attackingKeys, alternate, selfAttacking):
         print("change labellings called")
         print("attackingKeys ", attackingKeys)
         print("originalKey ", originalKey)
+        print("newKey ", key)
         #argument being attacked = B
         #new argument attacking = A
         #arguments being attacked by B = C
@@ -90,45 +103,67 @@ class Database:
             
             #if the first argument is the one being attacked
             if originalKey == attacking: 
+                #original key is the one being attacked
                 print("original key is the one being attacked")
 
-                # updates argument B to say it is now being attacked by A
+                # updates originalKey to say it is being attacked by the new argument
                 db.child('arguments').child(originalKey).child('attackedBy').update(updateAttackedBy)
+                #if the new attacking argument is not an "alternate"
                 if alternate == False:
                     print("alternate is false")
                     #update original argument as out
                     print("we in the right place tho")
-                    labellings = {'in': False, 'out': True, 'undec': False}
-                    db.child('arguments').child(originalKey).child('labellings').set(labellings)
+                    #if the new attacking argument is attacking itself then the argument it attacks does not need to change
+                    if selfAttacking == True:
+                        labellings = {'in': False, 'out': True, 'undec': False}
+                        db.child('arguments').child(originalKey).child('labellings').set(labellings)
+                #if it is an alternate; alternate == true
                 else:
                     print("alternate is true")
-                    #this sets the new argument A as also attacked by B which it attacks
+                    #here attacking is the originalKey
                     updateAttackedBy = {attacking : "attackedBy"}
-                    db.child('arguments').child(originalKey).child('attackedBy').update(updateAttackedBy)
 
-                    #now change the labellings for argument B as undecised
-                    labellings = {'in': False, 'out': False, 'undec': True}
-                    db.child('arguments').child(originalKey).child('labellings').set(labellings)
+                    #this sets the new argument as attacked by original
+                    db.child('arguments').child(originalKey).child('argumentSchema').child(key).child('attackedBy').update(updateAttackedBy)
+
+                    updateAttacking = {key : "attacking"}
+                    #this sets the original argument as attacking the new argument
+                    db.child('arguments').child(originalKey).child('attacking').update(updateAttacking)
+
+                    #now change the labellings for argument B as undecided as long as the new argument does not attack itself
+                    if selfAttacking == True:
+                        labellings = {'in': False, 'out': False, 'undec': True}
+                        db.child('arguments').child(originalKey).child('labellings').set(labellings)
 
                 #returns the next arguments whose labels need to be edited
                 argument = db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).get()
 
             else: #if argument being attacked is not the original
-                print("why tho")
+                print("original key is not being attacked")
                 # updates argument B to say it is now being attacked by A
                 db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('attackedBy').update(updateAttackedBy)
                 if alternate == False:
+                    print("alternate is false")
                     #the current argument just added is the starting point for the algorithm which is now "in"
                     #update argument B as out
-                    labellings = {'in': False, 'out': True, 'undec': False}
-                    db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('labellings').set(labellings)
+                    if selfAttacking == True:
+                        labellings = {'in': False, 'out': True, 'undec': False}
+                        db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('labellings').set(labellings)
                 else:
+                    #originalKey is not being attacked and alternate is true
+                    print("alternate is true")
+                    print("original Key", originalKey)
+                    print("attacking", attacking)
                     #this sets the new argument A as also attacked by B which it attacks
                     updateAttackedBy = {attacking : "attackedBy"}
-                    db.child('arguments').child(originalKey).child(key).child('attackedBy').update(updateAttackedBy)
+                    db.child('arguments').child(originalKey).child('argumentSchema').child(key).child('attackedBy').update(updateAttackedBy)
+                    #this sets the argument B as also attacking the new argument A
+                    updateAttacking = {attacking : "attacking"}
+                    db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('attacking').update(updateAttacking)
                     #now change the labellings for argument B as undecises
-                    labellings = {'in': False, 'out': False, 'undec': True}
-                    db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('labellings').set(labellings)
+                    if selfAttacking == True:
+                        labellings = {'in': False, 'out': False, 'undec': True}
+                        db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('labellings').set(labellings)
                 #returns the next arguments whose labels need to be edited
                 argument = db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).get()
                 
@@ -146,6 +181,7 @@ class Database:
                 if newAttacking is not None:
                     #recursively runs through from 
                     print("after attempt to delete", newAttacking)
+                    #send through recursively running through the rest of the schema checking which arguments are now in or out
                     self.change_labellings_recursive(originalKey, attacking, newAttacking, alternate)
             except:
                 pass
@@ -161,7 +197,7 @@ class Database:
             #     updateAttackedBy = {attacking : "attackedBy"}
             #     db.child('arguments').child(originalKey).child(key).child('attackedBy').update(updateAttackedBy)
 
-            #     #now change the labellings for argument B as undecises
+            #     #now change the labellings for argument B as undecised
             #     labellings = {'in': False, 'out': False, 'undec': True}
             #     db.child('arguments').child(originalKey).child(attacking).child('labellings').set(labellings)
                 #check if this argument (B) has any other attackers which are "in", if it does then B is "out" and the current argument (A) is in
@@ -176,14 +212,16 @@ class Database:
     
     #if an argument is an alternate this runs through the schema checking if the arguments have an attacker which is in
     def change_labellings_recursive(self, originalKey, key, attackingKeys, alternate):
+        #key is the argument that has just newly been attacked and been made either undecided or out
+        #new attacking are the arguments attacked by key
         print ("recursive check")
         for attacking in attackingKeys:
             if attacking == originalKey: 
                 path = "db.child('arguments')"
                 argument = db.child('arguments').child(originalKey).get()
             else:
-                path = "db.child('arguments').child(originalKey)"
-                argument = db.child('arguments').child(originalKey).child(attacking).get()
+                path = "db.child('arguments').child(originalKey).child('argumentSchema')"
+                argument = db.child('arguments').child(originalKey).child("argumentSchema").child(attacking).get()
             #this should be a data frame of the information about argument B
             attacked = pd.DataFrame(argument.val())
             attacked.to_dict()
@@ -199,23 +237,30 @@ class Database:
             for element in newAttacked:
                 #run through all arguments attacking the arguments in attacking Keys (B) and check if they are in or out
                 if in_argument_not_Found == True:
-                    checkLabellingsPath = path + ".child(element).child(labellings).get().val()"
+                    if element == originalKey:
+                        check = db.child('arguments').child(originalKey).child('labellings').get().val()
+                    else:
+                        check = db.child('arguments').child(originalKey).child('argumentSchema').child(element).child('labellings').get().val()
                     #check = db.child('arguments').child(originalKey).child(element).child(labellings).get().val()
-                    check = exec(checkLabellingsPath)
                     print("check", check)
                     #if they are in
                     if check['in'] == True:
                         labellings = {'in': False, 'out': True, 'undec': True}
                         in_argument_not_Found = False
                     #if they are undecided
-                    elif check['undec'] == True:
-                        labellings = {'in': False, 'out': False, 'undec': True}
+                    # elif check['undec'] == True:
+                    #     labellings = {'in': False, 'out': False, 'undec': True}
+
             #update the labellings for argument B based on whether a new argument is found
-            db.child('arguments').child(originalKey).child(argument).child('labellings').set(labellings)
+            if attacking == originalKey: 
+                db.child('arguments').child(originalKey).child('labellings').set(labellings)
+            else:
+                db.child('arguments').child(originalKey).child('argumentSchema').child(argument).child('labellings').set(labellings)
+
             #then recursively run through again
             print("new attacking list before recursive call", newAttacking)
             
-            #remove current argument which will not need to be uodated
+            #remove current argument which will not need to be updated
             newAttacking.pop(key, None)
             if newAttacking is not None:
                 #recursively runs through from 
@@ -228,9 +273,8 @@ class Database:
         #if self.check_logged_in():
         print("")
         try:
-            print("in databse add attack", self.userID) 
+            print("in database add attack", self.userID) 
             data["title"].title()
-            data["topic"].title()
             attacking = data["attacking"]
             data["uidAuthor"] = self.userID
             
@@ -253,10 +297,15 @@ class Database:
             userData = {key : originalKey}
             db.child("users").child(self.userID).child("attacks").update(userData)
             alternate = data["alternate"]
+            selfAttacking = data["selfAttack"]
+            print("self attack now", selfAttacking)
             print("alternate now", alternate)
             print("end of add attack call")
             print("")
-            self.change_labellings(originalKey, key, attacking, alternate)
+            if selfAttacking == True:
+                self.add_self_attack(originalKey, False, key)
+
+            self.change_labellings(originalKey, key, attacking, alternate, selfAttacking)
 
             print("OUT OF RECURSION!")
             print(key)
@@ -266,6 +315,21 @@ class Database:
             pass
         #else:
             #return None
+
+    #argument attacks itself and is attacked by itself
+    def add_self_attack(self, originalKey, original, key):
+        attacking = {key : "attacking"}
+        attacked = {key : "attackedBy"}
+        labellings = {"in": False, "out": True, "undec": False}
+        if original:
+            db.child('arguments').child(originalKey).child('attacking').update(attacking)
+            db.child('arguments').child(originalKey).child('attackedBy').update(attacked)
+            db.child('arguments').child(originalKey).child('labellings').set(labellings)
+        else:
+            db.child('arguments').child(originalKey).child('argumentSchema').child(key).child('attacking').update(attacking)
+            db.child('arguments').child(originalKey).child('argumentSchema').child(key).child('attackedBy').update(attacked)
+            db.child('arguments').child(originalKey).child('argumentSchema').child(key).child('labellings').set(labellings)
+
 
     def add_argument(self, data, fileRef, image):
         if self.check_logged_in():
@@ -278,9 +342,13 @@ class Database:
                 labellings = {"in": True, "out": False, "undec": False}
                 data["labellings"] = labellings
 
+
                 print(data)
 
                 argumentKey = db.child("arguments").push(data)
+                if data['selfAttack'] == True:
+                    self.add_self_attack(argumentKey, True, argumentKey)
+
                 #db.child('arguments').child(argumentKey['name']).set(data)
                 #argumentKey = db.child("users").child(self.userID).child("arguments").push(data)
                 key = argumentKey['name']
@@ -291,7 +359,7 @@ class Database:
                 db.child("users").child(self.userID).child("arguments").update(userData)
                 topic = data["topic"]
                 authorInfo = {key : self.userID}
-                topicKey = db.child("topics").child(topic).update(authorInfo)
+                topicKey = db.child("topics").child(topic).child("arguments").update(authorInfo)
                 return (data["title"])
             except:
                 pass
@@ -308,8 +376,40 @@ class Database:
             criticalQuestions.pop(0)
             return criticalQuestions
         except:
-            print("uh oh critical questions")
             return None
+    
+    #return a list of the argument types the user can choose from
+    def return_argumentTypes(self):
+        argumentTypeTitle = db.child("argumentType").get().val()
+        data = pd.DataFrame(argumentTypeTitle).to_dict()
+        listTypes = {}
+        for argumentType in argumentTypeTitle:
+            description = data[argumentType]["description"]
+            description.pop(0)
+            listTypes[argumentType] = description[0]
+        return listTypes
+    
+    #returns the formatting of the argument that can be used to attack an argument
+    def return_argumentFormats(self, argumentType):
+        try:
+            argumentFormat = db.child("argumentType").child(argumentType).child("format").get().val()
+            argumentFormat.pop(0)
+            return argumentFormat
+        except:
+            return None
+
+
+
+    # def return_argument_content(self, originalKey, key):
+    #     if key == originalKey:
+    #         argumentContent = db.child("arguments").child(originalKey).get().val()
+    #         argumentContent.pop('argumentSchema', None)
+    #         content = pd.DataFrame(argumentContent)
+    #         return content.to_dict()
+    #     else:
+    #         argumentContent = db.child("arguments").child(originalKey).child("argumentSchema").child(key).get().val()
+    #         content = pd.DataFrame(argumentContent)
+    #         return content.to_dict()
 
     #returns the current user's arguments
     def return_arguments(self):
@@ -319,18 +419,28 @@ class Database:
             #username = db.child('users').child(self.userID).child('username').get().val()
             #print (username)
             argumentKey = db.child('users').child(self.userID).child('arguments').get().val()
-            print(argumentKey) #OrderedDict([('-M1axBKlwoxMjN_qJnb1', 'author'), ('-M1ayqYaaeJ3zKlSQYrK', 'author')])
+            #print(argumentKey) #OrderedDict([('-M1axBKlwoxMjN_qJnb1', 'author'), ('-M1ayqYaaeJ3zKlSQYrK', 'author')])
             toReturn = {}
-            for key, value in argumentKey.items():
-                toReturn[key] = db.child('arguments').child(key).get().val()
-                print(db.child('arguments').child(key).get().val())
-                #print(db.child('arguments').child(key).get())
+            if argumentKey != None:
+                print("ok")
+                for key, value in argumentKey.items():
+                    toReturn[key] = db.child('arguments').child(key).get().val()
+                    toReturn[key]["originalKey"] = key
+                    #print(db.child('arguments').child(key).get().val())
+                    #print(db.child('arguments').child(key).get())
+
             argumentKey = db.child('users').child(self.userID).child('attacks').get().val()
             print(argumentKey) #OrderedDict([('-M1axBKlwoxMjN_qJnb1', 'author'), ('-M1ayqYaaeJ3zKlSQYrK', 'author')])
-            for key, value in argumentKey.items():
-                toReturn[key] = db.child('arguments').child(value).get().val()
-                print(db.child('arguments').child(key).get().val())
-                #print(db.child('arguments').child(key).get())
+            if argumentKey != None:
+                for key, value in argumentKey.items():
+                    print(key, "key is the key of the attacking argument")
+                    print(value, "value is the key of the original argument")
+                    #key is the key of the attacking argument
+                    #value is the key of the original argument
+                    toReturn[key] = db.child('arguments').child(value).child('argumentSchema').child(key).get().val()
+                    toReturn[key]["originalKey"] = value
+                    print(toReturn[key])
+            
             return toReturn
 
             #argument = db.child('arguments').child(argumentKey).get()
@@ -352,43 +462,91 @@ class Database:
             #return self.userID
         else: 
             return None
-    
-    def return_argumentsOG(self):
-        print ("called me")
-        if self.check_logged_in():
-            print(self.userID) 
-            username = db.child('users').child(self.userID).child('username').get().val()
-            print (username)
-            argument = db.child('users').child(self.userID).child('arguments').get()
-            data = pd.DataFrame(argument.val())
-            print("dictionary", data.to_dict())
-            #dictionary {'-M1GrB2f4w35ZwQVMYUR': {'content': 'have ALL the babies. ALL OF THEM.', 'fileReference': '', 'title': 'abortion sucks bitched', 'topic': 'abortion', 'urlReference': ''}, '-M1Gzr2YVAaF9dmuzF_7': {'content': 'computer says no', 'fileReference': nan, 'title': 'No Brexit for Britain', 'topic': 'Brexit', 'urlReference': ''}}
-            return data.to_dict()
-            #print (argument)
-            # data                             -M1GrB2f4w35ZwQVMYUR   -M1Gzr2YVAaF9dmuzF_7
-            # content        have ALL the babies. ALL OF THEM.       computer says no
-            # fileReference                                                       NaN
-            # title                     abortion sucks bitched  No Brexit for Britain
-            # topic                                   abortion                 Brexit
-            #image = storage.child("images").child('-M1Gzr2YVAaF9dmuzF_7').get('argupediaBrexit.jpg')
-            #print ("image?")
-            #return self.userID
-        else: 
-            return None
          
 
-    def return_schema(self, key):
-        argument = db.child('arguments').child(key).child('argumentSchema').get()
-        print(argument)
-        data = pd.DataFrame(argument.val())
-        print("oh my days fuck me seriously????????", data.to_dict())
-        data.to_dict()
+    def return_schema2(self, originalKey):
+        originalArgument = db.child('arguments').child(originalKey).get().val()
+        toReturn = {}
+        for (key, value) in originalArgument.items():
+            try:
+                print("adding children")
+                for (newKey, newValue) in value['argumentSchema'].items():
+                    data = pd.DataFrame(newValue)
+                    valueDict = data.to_dict()
+                    print("new key", newKey)
+                    toReturn[newKey] = newValue
+            except:
+                print("no addy childreny")
+                pass
+            try: 
+                value.pop('argumentSchema', None)
 
-        return data.to_dict()
+            except:
+                print("no poppidy")
+                pass
+            
+            toReturn[key] = value
+            
+            print(type(key)) #string
+            print(type(value)) #dict
+
+        
+        print("toReturn", toReturn)
+        return toReturn
+
+    def return_schema(self, originalKey):
+        print("")
+        print(originalKey)
+        print("")
+        originalArgument = db.child('arguments').child(originalKey).get().val()
+        try:
+            originalArgument.pop('argumentSchema', None)
+        except:
+            print("error line 478 database.py originalArgument.pop('argumentSchema', None)")
+
+        argument = db.child('arguments').child(originalKey).child('argumentSchema').get()
+        data = pd.DataFrame(argument.val())
+        inclOriginal = data.to_dict()
+        inclOriginal[originalKey] = originalArgument
+        print("final", inclOriginal)
+        print("")
+        return inclOriginal
+        
+# original OrderedDict([('-M1v_Wu7l6mpOYEha1fU', 
+#                                 {'argumentSchema': 
+#                                 {'-M2TztWLfZde4ymGK3-B': 
+#                                     {'alternate': False, 
+#                                     'attackedBy': 
+#                                         {'-M2TztWLfZde4ymGK3-B': 'attackedBy'}, 
+#                                     'attacking': 
+#                                         {'0': '-M1v_Wu7l6mpOYEha1fU', 
+#                                         '-M2TztWLfZde4ymGK3-B': 'attacking'}, 
+#                                     'content': 'cgfvhjbnk', 
+#                                     'fileReference': '', 
+#                                     'image': '', 
+#                                     'labellings': 
+#                                         {'in': False, 'out': True, 'undec': False}, 
+#                                     'selfAttack': True, 
+#                                     'title': 'testing self attacking', 
+#                                     'uidAuthor': 'IdZbjSY6RmeUDhgsLZaPA1bv9OI2', 
+#                                     'urlReference': ''}}, 
+#                             'argumentType': 'expertOpinion', 
+#                             'attackedBy': {'-M2TztWLfZde4ymGK3-B': 'attackedBy'}, 
+#                             'content': 'Expert says X and Y which means that this is what I believe and we should all believe.', 
+#                             'fileReference': '', 
+#                             'image': 'https://www.michiganreview.com/wp-content/uploads/2016/11/75384602.jpg', 
+#                             'labellings': {'in': True, 'out': False, 'undec': False}, 
+#                             'title': 'Abortion is wrong because expert says so', 
+#                             'topic': 'Abortion', 
+#                             'uidAuthor': 'IdZbjSY6RmeUDhgsLZaPA1bv9OI2',
+#                              'urlReference': 'https://www.michiganreview.com/wp-content/uploads/2016/11/75384602.jpg'}), 
+#                              ('-M251jahlPO93-9B4TwS', {'argumentType': 'positionToKnow', 'content': 'cfgvhjbkn;lm;,', 'fileReference': '', 'image': '', 'labellings': {'in': True, 'out': False, 'undec': False}, 'title': 'Dont do it pls and thanks', 'topic': 'Brexit', 'uidAuthor': 'IdZbjSY6RmeUDhgsLZaPA1bv9OI2', 'urlReference': ''})])
+
+
     
     def search_arguments(self, topic):
         topic = topic.title()
-        data = db.child("topics").child(topic).get().val()
+        data = db.child("topics").child(topic).child("arguments").get().val()
         if data is not None:
             try:
                 dataInDict = {}
@@ -408,7 +566,7 @@ class Database:
         #print ("topic", topic)
         topic = topic.title()
         #data = db.child("topics").child(topic).get()
-        data = db.child("topics").child(topic).get().val()
+        data = db.child("topics").child("arguments").child(topic).get().val()
         print ("data", data)
         if data is not None:
             try:
@@ -427,6 +585,97 @@ class Database:
                 return None
         else:
             return None
+    
+    def return_graph_data(self, originalKey):
+        schema = self.return_schema(originalKey)
+        # originalArgument = db.child('arguments').child(key).get().val()
+        # originalArgument.pop('argumentSchema', None)
+        # argument = db.child('arguments').child(key).child('argumentSchema').get()
+        # data = pd.DataFrame(argument.val())
+        # inclOriginal = data.to_dict()
+        # inclOriginal[key] = originalArgument
+        # return inclOriginal
+
+        # print("")
+        # print("return graph data")
+        # print("")
+        #print(schema)
+
+        # {'-M2TztWLfZde4ymGK3-B': 
+        #     {'alternate': False, 
+        #     'attackedBy': 
+        #         {'-M2TztWLfZde4ymGK3-B': 'attackedBy'}, 
+        #     'attacking': {'0': '-M1v_Wu7l6mpOYEha1fU', 
+        #     '-M2TztWLfZde4ymGK3-B': 'attacking'}, 
+        #     'content': 'cgfvhjbnk', 
+        #     'fileReference': '', 
+        #     'image': '', 
+        #     'labellings': {'in': False, 'out': True, 'undec': False}, 
+        #     'selfAttack': True, 
+        #     'title': 'testing self attacking', 
+        #     'uidAuthor': 'IdZbjSY6RmeUDhgsLZaPA1bv9OI2', 
+        #     'urlReference': ''}, 
+        # '-M1v_Wu7l6mpOYEha1fU': 
+        #     OrderedDict([
+        #     ('argumentType', 'expertOpinion'), 
+        #     ('attackedBy', {'-M2TztWLfZde4ymGK3-B': 'attackedBy'}), 
+        #     ('content', 'Expert says X and Y which means that this is what I believe and we should all believe.'), 
+        #     ('fileReference', ''), 
+        #     ('image', 'https://www.michiganreview.com/wp-content/uploads/2016/11/75384602.jpg'), 
+        #     ('labellings', {'in': True, 'out': False, 'undec': False}), 
+        #     ('title', 'Abortion is wrong because expert says so'), ('topic', 'Abortion'), 
+        #     ('uidAuthor', 'IdZbjSY6RmeUDhgsLZaPA1bv9OI2'), 
+        #     ('urlReference', 'https://www.michiganreview.com/wp-content/uploads/2016/11/75384602.jpg')])}
+        # print("")
+        # print ("fin")
+        # print("")
+
+        nodes = {}
+        edges = []
+        edgesNames = {}
+        try:
+            for key, value in schema.items():
+                print("HEREEEEEEEEEEEEEEEEEEEEEE", value["labellings"])
+                print("HEREEEEEEEEEEEEEEEEEEEEEE", value["labellings"]["in"])
+                if value["labellings"]["in"] == True: 
+                    labelling = "in"
+                elif value["labellings"]["out"] == True: 
+                    labelling = "out"
+                else: 
+                    labelling = "undecided"
+                nodes[key] = [value["title"], labelling]
+                print("")
+                print("current key", key)
+                print("")
+                try:
+                    attacking = value["attacking"]
+                    print("attacking", attacking) #attacking {'-M1v_Wu7l6mpOYEha1fU': 'attacking', '-M2TztWLfZde4ymGK3-B': 'attacking'}
+                    name = 1
+                    for aKey, aValue in attacking.items():
+                        print("attacking from (", key, "to ,", aKey, ")")
+                        if key not in edgesNames and aKey not in edgesNames:
+                            edgesNames[key] = name
+                            name += 1
+                            edgesNames[aKey] = name
+                            name+=1
+                        elif (edgesNames[key]) == None:
+                            edgesNames[key] = name
+                            name += 1
+                        elif (edgesNames[aKey]) == None:
+                            edgesNames[aKey] = name
+                            name += 1
+                        edges.append((edgesNames[key], edgesNames[aKey]))
+                    print("edges", edges)
+                    print("edgesNames", edgesNames.items())
+                except:
+                    pass
+            for key, value in nodes.items():
+                nodes[key] = {"title": value[0], "number": edgesNames[key], "labelling": value[1]}
+        except:
+            pass
+        return [nodes, edges]
+        
+
 
 
 

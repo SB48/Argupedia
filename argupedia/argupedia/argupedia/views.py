@@ -28,7 +28,9 @@ db = Database()
 
 #Load Pages:
 def home_page(request):
-    context = {"title": "Home"}
+    images = db.return_images()
+    uid = db.return_uid()
+    context = {"title": "Home", "uid": uid, "images" : images, "uid": uid}
     template_name = 'argupedia/index.html'
     return render(request, template_name, context)
 
@@ -46,7 +48,8 @@ def logged_in(request):
 
 #Register
 def register_page(request):
-    context = {"title": "Register"}
+    uid = db.return_uid()
+    context = {"title": "Register", "uid": uid}
     template_name = 'argupedia/register.html'
     return render(request, template_name, context)
 
@@ -68,16 +71,18 @@ def post_register(request):
         print("register completed")
         post_login(request)
     except:
-        context = {"message": "There was an error creating your account"}
+        context = {"message": "There was an error creating your account", "uid": None}
         template_name = 'argupedia/register.html'
         return render(request, template_name, context)
-    context = {"e": "Welcome {}".format(email)}
+    uid = db.return_uid()
+    context = {"e": "Welcome {}".format(email), "uid": uid}
     template_name = 'argupedia/login_success.html'
     return render(request, template_name, context)
 
 
 def login_page(request):
-    context = {"title": "Log In"}
+    uid = db.return_uid()
+    context = {"title": "Log In", "uid": uid}
     template_name = 'argupedia/login.html'
     return render(request, template_name, context)
 
@@ -93,10 +98,11 @@ def post_login(request):
         db.set_uid(request.session['uid'])
     except:
         print("we tried")
-        context = {"message":"invalid credentials"}
+        context = {"message":"invalid credentials", "uid": None}
         template_name = 'argupedia/login.html'
         return render(request, template_name, context )
-    context = {"e": "Welcome {}".format(email)}
+    uid = db.return_uid()
+    context = {"e": "Welcome {}".format(email), "uid": uid}
     template_name = 'argupedia/login_success.html'
     return render(request, template_name, context)
 
@@ -106,16 +112,26 @@ def log_out(request):
     try:
         auth.logout(request)
         db.log_out()
-        context = {"message": "You have successfully logged out"}
+        context = {"message": "You have successfully logged out", "uid": None}
     except:
         print("log out error")
-        context = {"message": "There was an error logging you out"}
-    template_name = 'argupedia/index.html'
+        uid = db.return_uid()
+        context = {"message": "There was an error logging you out", "uid": uid}
+    template_name = 'argupedia/login_success.html'
+    return render(request, template_name, context)
+
+def about_page(request):
+    uid = db.return_uid()
+    context = {"title": "About", "uid": uid}
+    template_name = 'argupedia/about.html'
     return render(request, template_name, context)
 
 #add an argument 
 def add_argument(request):
-    print("called me!!!")
+    if request.POST.get('selfAttack') is None:
+        selfAttack = False
+    else: 
+        selfAttack = True
     data = {
         "topic": request.POST.get('topic'),
         "title" : request.POST.get('title'),
@@ -123,13 +139,16 @@ def add_argument(request):
         "urlReference": request.POST.get('urlReference'),
         "fileReference": request.POST.get('fileReference'),
         "image": request.POST.get('image'),
-        "argumentType" : request.POST.get('argumentType')
+        "argumentType" : request.POST.get('argumentType'), 
+        "selfAttack" : selfAttack,
+        "content": str(request.POST.get('content-1')) + str(request.POST.get('content-2')) + str(request.POST.get('content-3')) + str(request.POST.get('content-4')),
     }
     fileRef =  request.POST.get('fileReference')
     image = request.POST.get('image')
     passCheck = db.add_argument(data, fileRef, image)
+    uid = db.return_uid()
     if passCheck is None: 
-        context = {"message": "Error"}
+        context = {"message": "Error", "uid": uid}
         template_name = 'argupedia/create_argument.html'
         return render(request, template_name, context)
         #userID = authF.currentUser().getIdToken()
@@ -137,23 +156,34 @@ def add_argument(request):
         # print(userID)
         # dbF.child("users").child(userID).child("arguments").push(data)
     else:
-        context = {"e": "Your argument {} has been successfully submitted".format(passCheck)}
+        context = {"e": "Your argument {} has been successfully submitted".format(passCheck), "uid": uid}
         template_name = 'argupedia/login_success.html'
         return render(request, template_name, context)
 
 def search_argument_page(request):
-    #context = {"title": "Create Argument"}
+    argumentTypes = db.return_argumentTypes()
     template_name = 'argupedia/search_argument.html'
     uid = db.return_username()
-    return render(request, template_name, {"uid" : uid})
+    return render(request, template_name, {"uid" : uid, "types": argumentTypes})
 
 def create_argument_page(request):
     template_name = 'argupedia/create_argument.html'
-    topic = request.POST.get('argumentTopic')
+    argumentType = request.POST.get('argumentType')
+    argumentFormat = db.return_argumentFormats(argumentType)
     uid = db.return_uid()
-    #db.check_if_argument_exists(topic)
-    #LATER IMPLEMENTATION - search and check if argument exists
-    return render(request, template_name, {"topic" : topic, "uid": uid})
+    return render(request, template_name, {"format" : argumentFormat, "uid": uid})
+
+def view_argument_info_page(request):
+    uid = db.return_uid()
+    template_name = 'argupedia/view_argument_info.html'
+    data = {
+        "content": request.POST.get('content'),
+        "title" : request.POST.get('title'), 
+        "urlReference": request.POST.get('urlReference'),
+        "fileReference": request.POST.get('fileReference'),
+        "labellings": request.POST.get('labellings'),
+    }
+    return render(request, template_name, {"value": data,"uid": uid})
 
 #to delete comment: unsure when this function is used
 def view_arguments_page(request):
@@ -171,7 +201,7 @@ def view_arguments_page(request):
 
     #uncomment the following after testing:
     toReturn = {"uid" : uid, "arguments" : argument}
-    if argument is not None:
+    if (argument):
         toReturn = {"uid" : uid, "arguments" : argument}
         print("")
         print ("views print statement", toReturn)
@@ -180,26 +210,93 @@ def view_arguments_page(request):
     else:
         return render(request, template_name, {"uid" : uid, "arguments": None})
 
+# def view_argument_content(request):
+#     originalKey = request.POSt.get("originalKey")
+#     key = request.POSt.get("key")
+#     argument = db.return_argument_content(originalKey, key)
+#     template_name = "argupedia/view_argument_content.html"
+#     context = {"argument": argument}
+#     return render(request, template_name, context)
+
+#reference : https://stackoverflow.com/questions/298772/django-template-variables-and-javascript Daniel Munoz
 def view_argument_schema_page(request):
+    uid = db.return_uid()
     print("viewing schema")
-    originalKey = request.POST.get('key')
+    originalKey = request.POST.get('originalKey')
+    print("originalKey", originalKey)
     arguments = db.return_schema(originalKey)
     template_name = 'argupedia/view_schema.html'
-    if arguments is not None:
-        context = {"originalKey": originalKey, "arguments": arguments, "schema" : True}
+    if arguments is not None: 
+        graphFile = db.return_graph_data(originalKey)
+        print ("graphFile", graphFile)
+        print ("graphFile", len(graphFile))
+        print ("graphFile", len(graphFile[1]))
+        if len(graphFile[1]) >= 1:
+            dot = "var dot = \"dinetwork {node[shape=circle];"
+            for tuple in graphFile[1]:
+                print("tuple", tuple)
+                toAdd = " " + str(tuple[0]) + " -> " + str(tuple[1]) + ";"
+                #toAdd = str("(",key,",",value,")")
+                dot = dot + "" + toAdd + ""
+            dot = dot[:-1]
+            dot = dot + " }\";"
+            print("")
+            print(dot)
+            print("")
+            context = {"originalKey": originalKey, "arguments": arguments, "schema" : True, "dot": dot, "names" : graphFile[0], "uid": uid}
+        else: 
+            context = {"originalKey": originalKey, "arguments": arguments, "schema" : True, "dot": None, "names" : None, "uid": uid}
+        #dot = "var dot = \"dinetwork {node[shape=circle]; 1 -> 2; 1 -> 1; 2 -> 1}\";"
+        #print(dot)
+        # var dot = "dinetwork {node[shape=circle]; 1 -> 1 -> 2; 2 -> 3; 2 -- 4; 2 -> 1 }";
+    # if arguments is not None:
+    #     graphFile = db.return_graph_data(originalKey)
+    #     nodes = "var importNodes = ["
+    #     for key, value in graphFile[0].items():
+    #         toAdd = "'" + str(key) + "','" + str(value) + "'"
+    #         #toAdd = str("(",key,",",value,")")
+    #         nodes = nodes + "" + toAdd + ","
+    #     nodes = nodes[:-1]
+    #     nodes = nodes + "];"
+    #     print("")
+    #     print(nodes)
+    #     print("")
+    #     edges = "var importEdges =["
+    #     for tuple in graphFile[1]:
+    #         toAdd = "'" + str(tuple[0]) + "','" + str(tuple[1]) + "'"
+    #         edges = edges + "" + toAdd + ","
+    #     edges = edges[:-1]
+    #     edges = edges + "];"
+    #     print("")
+    #     print(edges)
+    #     print("")
+    #     context = {"originalKey": originalKey, "arguments": arguments, "schema" : True, "nodes": nodes, "edges" : edges}
     else: 
-        context = {"originalKey": originalKey, "arguments": None, "schema" : True}
+        context = {"originalKey": originalKey, "arguments": None, "schema" : True, "uid": uid}
+    return render(request, template_name, context)
+
+def view_graph_page(request):
+    uid = db.return_uid()
+    print("called")
+    originalKey = request.POST.get("originalKey")
+    originalKey = request.POST.get("key")
+    graphFile = db.return_graph_data(originalKey)
+    #graphFile = db.return_schema_json()
+    template_name = 'argupedia/view_graph.html'
+    context = {"graph": graphFile, "uid": uid}
     return render(request, template_name, context)
 
 def search_argument_nav_page(request):
+    uid = db.return_uid()
     search = request.POST.get('searchTerm')
     template_name = 'argupedia/search_results.html'
     results = db.search_arguments(search)
-    context = {"arguments": results}
-    print("in views page",results)
+    context = {"arguments": results, "uid": uid}
+    print("in views page", results)
     return render(request, template_name, context)
 
 def critical_questions_page(request):
+    uid = db.return_uid()
     topic = request.POST.get('topic')
     key = request.POST.get('key')
     originalKey = request.POST.get('originalKey')
@@ -220,6 +317,7 @@ def critical_questions_page(request):
 
 #adds an attacking argument 
 def add_attack(request):
+    uid = db.return_uid()
     print("called add attack in views")
     originalKey = request.POST.get('originalKey')
     print("original key", originalKey)
@@ -227,12 +325,16 @@ def add_attack(request):
         alternate = False
     else: 
         alternate = True
+    
+    if request.POST.get('selfAttack') is None:
+        selfAttack = False
+    else: 
+        selfAttack = True
 
     # attackingKeys =  {}
     # for element in request.POST.get('attackingKey'):
     #     attackingKeys[element] = "attacking"
     data = {
-        "topic": request.POST.get('topic'),
         "title" : request.POST.get('title'),
         "content": request.POST.get('content'), 
         "urlReference": request.POST.get('urlReference'),
@@ -240,9 +342,11 @@ def add_attack(request):
         "image": request.POST.get('image'),
         "argumentType" : request.POST.get('argumentType'),
         "criticalQuestion": request.POST.get('criticalQuestion'),
-        "attacking": [request.POST.get('attackingKey')],
+        "attacking" : {request.POST.get('attackingKey') : "attacking"},
+        "originalKey": originalKey,
         "attackedBy": "",
-        "alternate" : alternate
+        "alternate" : alternate,
+        "selfAttack": selfAttack
     }
 
     print ("checkbox return value, ", data["alternate"])
@@ -250,7 +354,7 @@ def add_attack(request):
     image = request.POST.get('image')
     passCheck = db.add_attack(data, originalKey, fileRef, image)
     if passCheck is None: 
-        context = {"message": "Error"}
+        context = {"message": "Error", "uid": uid}
         template_name = 'argupedia/create_argument.html'
         return render(request, template_name, context)
         #userID = authF.currentUser().getIdToken()
@@ -258,9 +362,11 @@ def add_attack(request):
         # print(userID)
         # dbF.child("users").child(userID).child("arguments").push(data)
     else:
-        context = {"e": "Your argument {} has been successfully submitted".format(passCheck)}
+        context = {"e": "Your argument {} has been successfully submitted".format(passCheck), "uid": uid}
         template_name = 'argupedia/login_success.html'
         return render(request, template_name, context)
+
+
 
 
 
