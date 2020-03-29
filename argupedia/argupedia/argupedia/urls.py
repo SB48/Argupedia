@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.conf import settings
 from django.urls import path
-from .views import home_page, register_page, login_page, post_login, log_out, post_register, log_out, search_argument_page, add_argument, create_argument_page, view_arguments_page, search_argument_nav_page
+from .views import home_page, register_page, login_page, post_login, log_out, post_register, log_out, search_argument_page, add_argument, create_argument_page, view_arguments_page, search_argument_nav_page, critical_questions_page, add_attack, view_argument_schema_page, about_page, view_graph_page, view_argument_info_page
 
 urlpatterns = [
     path('', home_page, name='home_page'),
@@ -25,10 +25,17 @@ urlpatterns = [
     path('post_login/', post_login, name = 'post_login'),
     path('post_register/', post_register, name = 'post_register'),
     path('add_argument/', add_argument, name = 'add_argument'),
+    path('add_attack/', add_attack, name = 'add_attack'),
+    path('view_argument/', view_argument_info_page, name = 'view_argument_info_page'),
+    path('about/', about_page, name = 'about_page'),
+    path('graph/', view_graph_page, name = 'view_graph_page'),
     path('start_a_debate/', search_argument_page, name = 'search_argument_page'),
     path('get_writing/', create_argument_page, name = 'create_argument_page'),
     path('your_contributions/', view_arguments_page, name = 'view_arguments_page'),
     path('search_results/', search_argument_nav_page, name = 'search_argument_nav_page'),
+    path('schema_page/', view_argument_schema_page, name = 'view_argument_schema_page'),
+    path('critical_questions/', critical_questions_page, name = 'critical_questions_page'),
     path('log_out/', log_out, name = 'log_out'),
     path('admin/', admin.site.urls),
 ]
+

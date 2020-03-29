@@ -1,0 +1,50 @@
+{% block content %}
+
+<html>
+    <style>
+        .about-text{
+          margin-left: 6vw;
+          margin-right: 6vw;
+        }
+
+        @media (min-width:600px) {
+          .about-text{
+            margin-left: 10vw;
+            margin-right: 10vw;
+          }
+        }
+        /* reference: https://css-tricks.com/books/fundamental-css-tactics/scale-typography-screen-size/ */
+        @media (min-width:1000px) {
+          .about-text{
+            margin-left: 18vw;
+            margin-right: 18vw;
+          }
+        }
+
+      </style>
+    <body>
+        {% include 'argupedia\nav.html' %}
+        <div class = "about-text">
+            <div class="container-fluid d-flex p-2 title-text">
+                <h4>About us</h4>
+            </div>
+            <div class="container-fluid d-flex p-2">
+                This website attempts to use an argumentation framework in order to bring a logical framework to arguments.
+                <br>
+                <br>
+                An argument can be "in"
+                <br>
+                An argument can be "out"
+                <br>
+                An argument can be "undecided"
+                <br>
+            </div>
+    
+            <br>
+        </div>
+        
+
+    </body>
+</html>
+
+{%  endblock %}

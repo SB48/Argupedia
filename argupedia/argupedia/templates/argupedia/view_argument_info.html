@@ -1,0 +1,82 @@
+
+      <!-- Modal -->
+      {% load django_popup_view_field_tags %}
+
+      {% block content %}
+
+      <html>
+        <style>
+          .argument-info{
+            margin-left: 6vw;
+            margin-right: 6vw;
+          }
+
+          @media (min-width:600px) {
+            .argument-info{
+              margin-left: 10vw;
+              margin-right: 10vw;
+            }
+          }
+          /* reference: https://css-tricks.com/books/fundamental-css-tactics/scale-typography-screen-size/ */
+          @media (min-width:1000px) {
+            .argument-info{
+              margin-left: 18vw;
+              margin-right: 18vw;
+            }
+          }
+
+        </style>
+          <body>
+              {% include 'argupedia\nav.html' %}
+              <div class = "argument-info">
+
+                  <div class="container-fluid d-flex p-2 title-text">
+                    <h4>{{value.title }}</h4>
+                </div>
+                <div class="container-fluid d-flex p-2">
+                    {{value.content }}
+                </div>
+                  <br>
+                  {% if value.fileReference != "" or value.urlReference != "" %}
+                    <div class = "container-fluid d-flex p-2">
+                      <br>
+                        <h6>References:</h6>
+                    </div>
+                    <div class="container-fluid d-flex p-2">
+                        {% if value.fileReference != "" %}
+                          <i class="glyphicon glyphicon-link"></i>
+                          <span class="glyphicon glyphicon-link"></span>
+                          <a href="{{value.fileReference}}" class="tooltip-test" title="fileRef">File Reference</a>
+                        {% endif %}
+                        {% if value.urlReference != "" %}
+                          <i class="glyphicon glyphicon-paperclip"></i>
+                          <span class="glyphicon glyphicon-link"></span>
+                          <a href="{{value.urlReference}}" class="tooltip-test" title="URLRef">Link Reference</a>
+                        {% endif %}
+                    </div>
+                  {% endif %}
+        
+                  {% if value.labellings.undec == True and uid is not None %}
+                    This argument is undecided. 
+                    If it receives enough votes then it will be considered "winning" over the argument that attacks it. 
+                    Alternatively, you could vote for the other undecided argument
+                  {% endif %}
+        
+        
+                <div class="container-fluid d-flex p-2">
+                  {% if value.labellings.undec == True and uid is not None %}
+                  <button type="button" class="btn btn-light" data-dismiss="modal">Vote For This Argument</button>
+                  {% endif %}
+                </div>
+        
+                <br>
+
+              </div>
+            
+              
+      
+          </body>
+      </html>
+      
+      {%  endblock %}
+    

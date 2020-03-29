@@ -1,0 +1,182 @@
+{% block content %}
+
+<html>
+  <style>
+    .text-format{
+      margin-left: 2vw
+    }
+  </style>
+    <body>
+        {% include 'argupedia\nav.html' %}
+
+         <!-- if uid is None 
+
+        <div class= "container-fluid d-flex justify-content-center">
+
+            Sorry, Please log in to submit a critical Question
+
+        </div>
+        
+        <div class= "container-fluid d-flex justify-content-center">
+            <a class="button" href="{% url 'login_page' %}">Log in</a>
+        </div>
+         else  -->
+        originalKey: {{originalKey}}
+        <!-- topic: {{topic}}
+        key: {{key}}
+        
+        uid: {{uid}} -->
+        <div class="container-fluid justify-content-center">
+          <div class="header">
+            <h2>{{topic}}</h2>
+          </div>
+          <br>
+          <form action = "{% url 'add_attack' %}" method= "post">
+            {% csrf_token %}
+            <input name="originalKey" type="hidden" value="{{originalKey}}"></input>
+            <div class="form-group row">
+              <label for="inputsm" class="col-sm-2 col-form-label">Argument Summary / Title</label>
+              <div class="col-sm-10">
+                <input class="form-control input-sm" name="title" type="text" placeholder="e.g. X is immoral because of Y">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="selfAttack" class = "col-sm-2"> Argument attacks itself</label><br>
+              <input type="checkbox" id="selfAttack" class = "col-sm-2" name="selfAttack" value="Bike">
+            </div>
+            <div class="form-group row text-format">
+              <div class = "col">
+                An alternate argument not only attacks the original argument but is also attacked by it.
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="alternate" class = "col-sm-2"> Alternate Argument</label><br>
+              <input type="checkbox" id="alternate" class = "col-sm-2" name="alternate">
+            </div>
+            <!-- Drop down form to choose which argument you would like to attack -->
+            <input name="attackingKey" type="hidden" value="{{key}}"></input>
+            <div class="row">
+              <div class = "col">
+                Please select the form of your critical question.
+              </div>
+            </div>
+            <fieldset class="form-group row">
+              <label for="criticalQuestion2" class="col-sm-2 col-form-label">Types</label>
+              {% for question in criticalQuestions %}
+                <div class="col-sm-10">
+                  <input type="radio" name="criticalQuestion" id="criticalQuestion2" value={{loop.index}}>
+                  <label class="form-check-label" id="criticalQuestion2" for="gridRadios1">
+                    {{ question }}
+                    {{loop.index}}
+                  </label>
+                </div>
+              {% endfor %}
+            </fieldset>
+            <fieldset class="form-group row text-format">
+              <div class="row">
+                <legend class="col-form-label col-sm-2 pt-0">Types</legend>
+                <div class="col-sm-10">
+                  {% for question in criticalQuestions %}
+                  <div class="form-check">
+                    <input type="radio" name="criticalQuestion" value={{loop.index}}>
+                    <label class="form-check-label" for="gridRadios1">
+                      {{ question }}
+                      {{loop.index}}
+                    </label>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </fieldset>
+            <div class="row">Please select your argument type</div>
+            <div class="row">This will depend on the content of the argument you are proposing and will affect the way in which others can attack it. </div>
+            <fieldset class="form-group row">
+              <div class="row">
+                <legend class="col-form-label col-sm-2 pt-0">Types</legend>
+                <div class="col-sm-10">
+                  <div class="form-check">
+                    <input type="radio" id="male" name="argumentType" value="positionToKnow">
+                    <label class="form-check-label" for="gridRadios1">
+                      Argument From Position To Know
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input type="radio" id="male" name="argumentType" value="expertOpinion">
+                    <label class="form-check-label" for="gridRadios1">
+                      Appeal To Expert Opinion
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input type="radio" id="male" name="argumentType" value="popularOpinion">
+                    <label class="form-check-label" for="gridRadios1">
+                      Appeal To Popular Opinion
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input type="radio" id="male" name="argumentType" value="analogyAppeal">
+                    <label class="form-check-label" for="gridRadios1">
+                      Appeal From Analogy
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+            <div class="form-group row green-border-focus">
+              <label for="exampleFormControlTextarea5" class="col-sm-2 col-form-label">Write Up Your Argument and Evidence Here</label>
+              <div class="col-sm-10">
+                <textarea class="form-control" name="content" id="exampleFormControlTextarea5" rows="3" placeholder="Evidence shows that X can no longer be considered moral..."></textarea>
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="url" class="col-sm-2 col-form-label">URL References</label>
+              <div class="col-sm-10">
+                <input type="url" class="form-control input-sm" name="urlReference" id="url" placeholder="https://example.com" pattern="https://.*" size="30" multiple>
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="files" class="col-sm-2 col-form-label">Upload Evidence</label>
+              <div class="col-sm-10">
+                <input type="file" id="files" name="fileReference" multiple><br><br>
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="url" class="col-sm-2 col-form-label">Cover Photo</label>
+              <div class="col-sm-10">
+                <input type="url" class="form-control input-sm" name="image" id="url" placeholder="https://example.com" pattern="https://.*" size="30" multiple>
+              </div>
+              <div class="container-fluid">
+                Including an image here is not necessary but is recommended to increase traction to your argument
+              </div>
+            </div>
+            <!-- <div class="form-group row">
+              Including an image here is not necessary but is recommended to increase traction to your argument
+              <label for="files" class="col-sm-2 col-form-label">Cover Photo</label>
+              <div class="col-sm-10">
+                <input type="file" id="image" name="image" multiple><br><br>
+              </div>
+            </div> -->
+            <div class="form-group row">
+              <div class="container-fluid d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary">Submit</button> <br>
+              </div>
+              <div class="container-fluid d-flex justify-content-center">
+                You will be able to edit your submission for the next 24 hours. After this period, you can no longer submit edits. Alterations must be submitted as reponses to criticisms.
+              </div>
+            </div>
+          </form>
+        </div>
+            
+
+          
+
+        <!-- endif -->
+
+    </body>
+
+
+
+
+</html>
+
+
+{%  endblock %}

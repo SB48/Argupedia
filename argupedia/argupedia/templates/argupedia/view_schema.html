@@ -1,0 +1,23 @@
+{% block content %}
+
+<html>
+    <body>
+        {% include 'argupedia\nav.html' %}
+
+        {% if dot is not None %}
+        {% include 'argupedia\view_graph.html' %}
+        {% endif %}
+
+        <div class="container-fluid d-flex justify-content-center title-text">
+            <h4>Choose an argument to attack</h4>
+        </div>
+
+        <br>
+
+        {% include 'argupedia\cards.html' %}
+        
+
+    </body>
+</html>
+
+{%  endblock %}
