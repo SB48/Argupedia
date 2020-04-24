@@ -23,16 +23,17 @@
       </div>
       <div class="form-group">
         <label for="exampleInput">Username</label>
-        <input type="text" class="form-control" name= "username" aria-describedby="emailHelp" placeholder="Choose a username">
+        <input type="text" class="form-control" name= "username" aria-describedby="emailHelp" placeholder="Choose a username" required>
         <small id="usernameHelp" class="form-text text-muted">This will be viewable by the public</small>
       </div>
       <div class="form-group">
         <label for="exampleInputEmail1">Email address</label>
-        <input type="email" class="form-control" id="exampleInputEmail1" name= "email" aria-describedby="emailHelp" placeholder="Enter email">
+        <input type="email" class="form-control" id="exampleInputEmail1" name= "email" aria-describedby="emailHelp" placeholder="Enter email" required>
       </div>
       <div class="form-group">
         <label for="exampleInputPassword1">Password</label>
-        <input type="password" class="form-control" name="password" id="exampleInputPassword1" placeholder="Password">
+        <input type="password" class="form-control" name="password" id="exampleInputPassword1" placeholder="Password" required>
+        <small id="usernameHelp" class="form-text text-muted">Password must be at least 6 characters long</small>
       </div>
       <br>
       <button type="submit" class="btn btn-primary justify-content-center">Register</button>

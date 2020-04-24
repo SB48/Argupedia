@@ -1,13 +1,15 @@
 {% load django_popup_view_field_tags %}
 <style>
   p {
-     width: 200px;
-     white-space: nowrap;
-     overflow: hidden;
-     text-overflow: ellipsis;
+    display: block;
+    width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 3.6em;
   }
 
-  .container-fluid {
+.container-fluid {
   display: flex;
   flex-wrap: wrap;
 }
@@ -17,6 +19,10 @@
   flex-basis: 300px; */
   width: 22rem;
   margin: 10px;
+}
+
+select {
+  font-size: small;
 }
 
 
@@ -50,7 +56,9 @@
               <div class="card-body">
                 <h5 class="card-title">{{value.title}} </h5>
                 <h6 class="card-subtitle mb-2 text-muted">{{value.topic }}</h6>
-                <p class="card-text">{{value.content}}</p>
+                <p class="card-text">
+                  {{value.content.0}}
+                </p>
                 {% if value.fileReference != "" %}
                   <a href={{value.fileReference}} class="card-link">File Reference</a>
                 {% endif %}
@@ -63,21 +71,32 @@
                 </button> -->
                 <form action="{% url 'view_argument_info_page' %}" method="post">
                   {% csrf_token %}
+                  {% if value.labellings.in == True %}
+                    <input name="labellings" type="hidden" value="in"></input>
+                  {% elif value.labellings.out == True %}
+                    <input name="labellings" type="hidden" value="out"></input>
+                  {% elif value.labellings.undec == True %}
+                    <input name="labellings" type="hidden" value="undecided"></input>
+                  {% endif %}
+                  {% if value.originalKey is None %}
+                  <input name="originalKey" type="hidden" value="{{key}}"></input>
+                  {% else %}
+                  <input name="originalKey" type="hidden" value="{{value.originalKey}}"></input>
+                  {% endif %}
+                  <input name="argumentKey" type="hidden" value="{{key}}"></input>
                   <input name="content" type="hidden" value="{{value.content}}"></input>
                   <input name="fileReference" type="hidden" value="{{value.fileReference}}"></input>
                   <input name="urlReference" type="hidden" value="{{value.urlReference}}"></input>
                   <input name="title" type="hidden" value="{{value.title}}"></input>
-                  <input name="labellings" type="hidden" value="{{value.labellings}}"></input>
                   <input type="submit" class="btn btn-light" data-toggle="modal" data-target="#exampleModalCenter" value="View Argument"></input>
                 </form>
                 <!-- originalKey: {{originalKey}}
                 key: {{key}} -->
                 <!-- <a href="{% url 'critical_questions_page' %}" style="color:black;" class="card-link">Add a Critical Question</a> -->
-                {% if schema == True %}
+                {% if schema == True and uid is not None %}
                 <!-- schema has been viewed, now user chooses which argument to attack -->
                 <form action="{% url 'critical_questions_page' %}" method="post">
                   {% csrf_token %}
-                  {{value.originalKey }}
                   {% if value.originalKey is None %}
                   <input name="originalKey" type="hidden" value="{{key}}"></input>
                   {% else %}
@@ -85,9 +104,17 @@
                   {% endif %}
                   <input name="key" type="hidden" value="{{key}}"></input>
                   <input name="topic" type="hidden" value="{{value.topic}}"></input>
+                  <select id="argumentType" name="argumentType">
+                    {% for type, description in types.items %}
+                    <option value="{{type}}">
+                        {{description}}
+                    </option>
+                    {% endfor %}
+                  </select>
                   <input type="submit" class="btn btn-light" value="Add a Critical Question"></input>
                 </form>
-                {% else %}
+                {% endif %}
+                {% if schema == False %}
                 <!-- schema has not been viewed  -->
                 <form action="{% url 'view_argument_schema_page' %}" method="post">
                   {% csrf_token %}

@@ -27,13 +27,18 @@
               <div class="form-group row">
                 <label for="Category" class="col-sm-2 col-form-label">Change Topic Header</label>
                 <div class="col-sm-10">
-                  <input type="text" class="form-control" name="topic" placeholder="Subject Domain">
+                  <input type="text" class="form-control" name="topic" placeholder="Subject Area" required>
+                </div>
+              </div>
+              <div class="form-group row">
+                <div class = "col">
+                  The topic header will help users search for your argument and to group debates into subject areas.
                 </div>
               </div>
               <div class="form-group row">
                 <label for="inputsm" class="col-sm-2 col-form-label">Argument Summary / Title</label>
                 <div class="col-sm-10">
-                  <input class="form-control input-sm" name="title" type="text" placeholder="e.g. X is immoral because of Y">
+                  <input class="form-control input-sm" name="title" type="text" placeholder="e.g. X is immoral because of Y" required>
                 </div>
               </div>
               <div class="form-group row">
@@ -50,11 +55,16 @@
                 <div class="form-group row green-border-focus">
                   <label for="exampleFormControlTextarea5" class="col-sm-2 col-form-label">{{inputEntry}}</label>
                   <div class="col-sm-10">
-                    <textarea class="form-control" name="content-{{forloop.counter}}" id="exampleFormControlTextarea5" rows="3" placeholder="{{inputEntry}}"></textarea>
+                    <textarea class="form-control" name="content-{{forloop.counter}}" id="exampleFormControlTextarea5" rows="3" placeholder="{{inputEntry}}"required></textarea>
                   </div>
                 </div>
               {% endfor %}
               <br>
+              <div class="form-group row">
+                <div class = "col">
+                  Here you can list any sources to back up your claims.
+                </div>
+              </div>
               <div class="form-group row">
                 <label for="url" class="col-sm-2 col-form-label">URL References</label>
                 <div class="col-sm-10">
@@ -68,12 +78,12 @@
                 </div>
               </div>
               <div class="form-group row">
+                <div class="container-fluid">
+                  Including an image here is not necessary but is recommended to increase traction to your argument
+                </div>
                 <label for="url" class="col-sm-2 col-form-label">Cover Photo</label>
                 <div class="col-sm-10">
                   <input type="url" class="form-control input-sm" name="image" id="url" placeholder="https://example.com" pattern="https://.*" size="30" multiple>
-                </div>
-                <div class="container-fluid">
-                  Including an image here is not necessary but is recommended to increase traction to your argument
                 </div>
               </div>
               <!-- <div class="form-group row">
