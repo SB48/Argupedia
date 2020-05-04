@@ -124,17 +124,15 @@ class Database:
                     #update original argument as out
                     print("we in the right place tho")
                     #if the new attacking argument is attacking itself then the argument it attacks does not need to change
-                    if selfAttacking == True:
+                    if selfAttacking == False:
                         labellings = {'in': False, 'out': True, 'undec': False}
                         db.child('arguments').child(originalKey).child('labellings').set(labellings)
+
                 #if it is an alternate; alternate == true
                 else:
                     print("alternate is true")
                     #here attacking is the originalKey
                     updateAttackedBy = {attacking : "attackedBy"}
-
-                    labellings = {"in": False, "out": False, "undec": True}
-                    db.child('arguments').child(originalKey).child('labellings').set(labellings)
 
                     #this sets the new argument as attacked by original
                     db.child('arguments').child(originalKey).child('argumentSchema').child(key).child('attackedBy').update(updateAttackedBy)
@@ -144,7 +142,7 @@ class Database:
                     db.child('arguments').child(originalKey).child('attacking').update(updateAttacking)
 
                     #now change the labellings for argument B as undecided as long as the new argument does not attack itself
-                    if selfAttacking == True:
+                    if selfAttacking == False:
                         labellings = {'in': False, 'out': False, 'undec': True}
                         db.child('arguments').child(originalKey).child('labellings').set(labellings)
 
@@ -159,7 +157,7 @@ class Database:
                     print("alternate is false")
                     #the current argument just added is the starting point for the algorithm which is now "in"
                     #update argument B as out
-                    if selfAttacking == True:
+                    if selfAttacking == False:
                         labellings = {'in': False, 'out': True, 'undec': False}
                         db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('labellings').set(labellings)
                 else:
@@ -168,34 +166,38 @@ class Database:
                     print("original Key", originalKey)
                     print("attacking", attacking)
                     
-                    labellings = {"in": False, "out": False, "undec": True}
-                    db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('labellings').set(labellings)
                     
 
                     #this sets the new argument A as also attacked by B which it attacks
                     updateAttackedBy = {attacking : "attackedBy"}
                     db.child('arguments').child(originalKey).child('argumentSchema').child(key).child('attackedBy').update(updateAttackedBy)
                     #this sets the argument B as also attacking the new argument A
-                    updateAttacking = {attacking : "attacking"}
+                    updateAttacking = {key : "attacking"}
                     db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('attacking').update(updateAttacking)
                     #now change the labellings for argument B as undecised
-                    if selfAttacking == True:
+                    if selfAttacking == False:
                         labellings = {'in': False, 'out': False, 'undec': True}
                         db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('labellings').set(labellings)
-                #returns the next arguments whose labels need to be edited
-                argument = db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).get()
+            
                 
             try: #this could be empty if the argument (B) which is now being attacked is itself not attacking any arguments
                 #this should be a data frame of the information about argument B
-                attacked = pd.DataFrame(argument.val())
-                attacked.to_dict()
+            
+                #returns the next arguments whose labels need to be edited
+                argument = db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).child('attacking').get().val()
+                print('here', argument)
+                attacked = pd.DataFrame(argument).to_dict()
                 print("argument B attacks: ",attacked)
+                print("argument B attacks: keys: ",attacked.keys())
                 #returns the arguments that the argument B itself attacks
                 newAttacking =  attacked['attacking']
                 print ("new attacking", newAttacking)
                 print("new attacking list before recursive call", newAttacking)
                 #remove current argument which will not need to be uodated
-                newAttacking.pop(key, None)
+                try:
+                    newAttacking.pop(key, None)
+                except:
+                    print("cannot pop")
                 if newAttacking is not None:
                     #recursively runs through from 
                     print("after attempt to delete", newAttacking)
@@ -235,10 +237,10 @@ class Database:
         print ("recursive check")
         for attacking in attackingKeys:
             if attacking == originalKey: 
-                path = "db.child('arguments')"
+                #path = "db.child('arguments')"
                 argument = db.child('arguments').child(originalKey).get()
             else:
-                path = "db.child('arguments').child(originalKey).child('argumentSchema')"
+                #path = "db.child('arguments').child(originalKey).child('argumentSchema')"
                 argument = db.child('arguments').child(originalKey).child("argumentSchema").child(attacking).get()
             #this should be a data frame of the information about argument B
             attacked = pd.DataFrame(argument.val())
@@ -277,6 +279,7 @@ class Database:
 
             #then recursively run through again
             print("new attacking list before recursive call", newAttacking)
+            print("hi")
             
             #remove current argument which will not need to be updated
             newAttacking.pop(key, None)
@@ -287,13 +290,11 @@ class Database:
                     
 
 
-    def add_attack(self, data, originalKey, fileRef, image):
+    def add_attack(self, data, originalKey, fileRef, image, attacking):
         #if self.check_logged_in():
         print("")
         try:
-            print("in database add attack", self.userID) 
             data["title"].title()
-            attacking = data["attacking"]
             data["uidAuthor"] = self.userID
             
             print("data[alternate] ",data["alternate"])
@@ -323,10 +324,7 @@ class Database:
             if selfAttacking == True:
                 self.add_self_attack(originalKey, False, key)
             elif alternate == True: #selfAttacking is false but alternate is true
-                alternateArgument = {'alternateArgument' : originalArgument}
-                db.child('arguments').child(originalKey).child('argumentSchema').child(key).update(alternateArgument)
-                alternateArgument = {'alternateArgument' : key}
-                db.child('arguments').child(originalKey).update(alternateArgument)
+                self.alternate_update(originalKey, key, attacking)
 
             self.change_labellings(originalKey, key, attacking, alternate, selfAttacking)
 
@@ -338,6 +336,36 @@ class Database:
             pass
         #else:
             #return None
+    
+    def alternate_update(self, originalKey, key, attackingKeys):
+        print("alternate update called")
+        alternateCheck = {'alternate': True}
+        for attacking in attackingKeys:
+            if originalKey == attacking:
+                try:   
+                    print("ok1") 
+                    alternateArgument = {'alternateArgument' : originalKey}
+                    alternateArgumentNew = {'alternateArgument' : key}
+                    db.child('arguments').child(originalKey).update(alternateArgumentNew)
+                    print("ok2") 
+                    db.child('arguments').child(originalKey).update(alternateCheck)
+                    print("ok3") 
+                except:
+                    print("oops1")
+                    pass
+            else: 
+                try:
+                    print("ok2") 
+                    alternateArgument = {'alternateArgument' : attacking}
+                    alternateArgumentNew = {'alternateArgument' : key}
+                    db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).update(alternateArgumentNew)
+                    print("ok2") 
+                    db.child('arguments').child(originalKey).child('argumentSchema').child(attacking).update(alternateCheck)
+                    print("ok3") 
+                except:
+                    print("oops")
+            db.child('arguments').child(originalKey).child('argumentSchema').child(key).update(alternateArgument)
+            db.child('arguments').child(originalKey).child('argumentSchema').child(key).update(alternateCheck)
 
     #argument attacks itself and is attacked by itself
     #original key relates to the original argument premise, original is a boolean to see if the 
@@ -392,13 +420,18 @@ class Database:
             return None
     
     #returns the list of critical questions that can be used to attack an argument
-    def return_criticalQuestions(self, argumentKey):
+    def return_criticalQuestions(self, argumentKey, originalKey):
         try:
             print (argumentKey)
-            argumentType = db.child("arguments").child(argumentKey).child("argumentType").get().val()
-            print (argumentType)
+            if originalKey == argumentKey:
+                argumentType = db.child("arguments").child(argumentKey).child("argumentType").get().val()
+            else:
+                argumentType = db.child("arguments").child(originalKey).child('argumentSchema').child(argumentKey).child("argumentType").get().val()
+            print ('argumentTYpe', argumentType)
             criticalQuestions = db.child("argumentType").child(argumentType).child("criticalQuestions").get().val()
+            print('criticalQuestions1', criticalQuestions)
             criticalQuestions.pop(0)
+            print('criticalQuestions2', criticalQuestions)
             return criticalQuestions
         except:
             return None
@@ -613,47 +646,72 @@ class Database:
     def returnVotes(self, originalKey, argumentKey):
         try:
             if originalKey == argumentKey:
-                print("hi")
+                print("hi return votes")
                 selfAttackCheck = db.child('arguments').child(originalKey).child('selfAttack').get().val()
                 print("check1", selfAttackCheck)
-                votes = db.child('arguments').child(originalKey).child('votes').get.val()
-                print("votes", votes)
+                if selfAttackCheck == None:
+                    selfAttackCheck = False
+                try:
+                    
+                    votes = db.child('arguments').child(originalKey).child('votes').get().val()
+                    print("votes", votes)
+                    return [selfAttackCheck, votes]
+                except:
+                    return[False, 0]
             else:
                 print("hi2")
                 print(originalKey)
                 print(argumentKey)
                 selfAttackCheck = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).child('selfAttack').get().val()
                 print("check2", selfAttackCheck)
-                votes = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).child('votes').get().val()
-                print("votes", votes)
-            return [selfAttackCheck, votes]
+                if selfAttackCheck == None:
+                    selfAttackCheck = False
+                try:
+                    votes = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).child('votes').get().val()
+                    print("votes", votes)
+                    return [selfAttackCheck, votes]
+                except:
+                    return[selfAttackCheck, 0]
         except:
             print ("error")
             return [True, 0]
     
     def vote(self, originalKey, argumentKey):
-        print("called")
+        print("called votes")
+        print(originalKey)
+        print(argumentKey)    
         votes = self.returnVotes(originalKey, argumentKey)
-        try:
-            votes += 1
-        except:
-            votes = 1
-        increaseVotes = {"votes": votes}
-        if originalKey == argumentKey:
-            votes = db.child('arguments').child(originalKey).update(increaseVotes)
+        if votes[0] == False:
+            print('votes', votes)
+            try:
+                votes[1] += 1
+                print(type(votes[1]))
+            except:
+                print(type(votes[1]))
+            vote = votes[1]
+            increaseVotes = {"votes": vote}
+            print('votes', vote)
+            if originalKey == argumentKey:
+                votes = db.child('arguments').child(originalKey).update(increaseVotes)
+            else:
+                votes = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).update(increaseVotes)
+            #self.checkVoting(originalKey, argumentKey, votes)
+            return ("Your vote has been logged")
         else:
-            votes = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).update(increaseVotes)
-        self.checkVoting(originalKey, argumentKey, votes)
-        return ("Your vote has been logged")
+            return('Sorry you cannot vote on a self attacking argument')
 
-    def checkVoting(self, originalKey, argumentKey, votes):
-        print ("check voting")
+    # def checkVoting(self, originalKey, argumentKey, votes):
+    #     print ("check voting")
 
-        #returns the key of the argument which attacks and is attacked by the current argument
-        if originalKey == argumentKey:
-            alternateArgument = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).child('alternateArgument').get().val()
-        else:
-            alternateArgument = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).child('alternateArgument').get().val()
+    #     #returns the key of the argument which attacks and is attacked by the current argument
+
+    #     try:
+    #         if originalKey == argumentKey:
+    #             alternateArgument = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).child('alternateArgument').get().val()
+    #         else:
+    #             alternateArgument = db.child('arguments').child(originalKey).child('argumentSchema').child(argumentKey).child('alternateArgument').get().val()
+    #     except:
+    #         pass
         
 
     
@@ -663,10 +721,9 @@ class Database:
         nodes = {}
         edges = []
         edgesNames = {}
+        name = 1
         try:
             for key, value in schema.items():
-                print("HEREEEEEEEEEEEEEEEEEEEEEE", value["labellings"])
-                print("HEREEEEEEEEEEEEEEEEEEEEEE", value["labellings"]["in"])
                 if value["labellings"]["in"] == True: 
                     labelling = "in"
                 elif value["labellings"]["out"] == True: 
@@ -680,23 +737,28 @@ class Database:
                 try:
                     attacking = value["attacking"]
                     print("attacking", attacking) #attacking {'-M1v_Wu7l6mpOYEha1fU': 'attacking', '-M2TztWLfZde4ymGK3-B': 'attacking'}
-                    name = 1
                     for aKey, aValue in attacking.items():
-                        print("attacking from (", key, "to ,", aKey, ")")
+                        print("attacking from (", key, "to ", aKey, ")")
+                        print('name', name)
                         if key not in edgesNames and aKey not in edgesNames:
+                            print("check1")
                             edgesNames[key] = name
                             name += 1
                             edgesNames[aKey] = name
-                            name+=1
-                        elif (edgesNames[key]) == None:
+                            name += 1
+                        elif key not in edgesNames:
+                            print("check2")
                             edgesNames[key] = name
                             name += 1
-                        elif (edgesNames[aKey]) == None:
+                        elif aKey not in edgesNames:
+                            print("check3")
                             edgesNames[aKey] = name
                             name += 1
+                        print("check4")
                         edges.append((edgesNames[key], edgesNames[aKey]))
-                    print("edges", edges)
-                    print("edgesNames", edgesNames.items())
+                        print("edges", edges)
+                        print("edges update",(edgesNames[key], edgesNames[aKey]))
+                        print("edgesNames", edgesNames.items())
                 except:
                     pass
             for key, value in nodes.items():

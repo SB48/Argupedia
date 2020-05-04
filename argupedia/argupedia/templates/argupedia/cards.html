@@ -57,7 +57,7 @@ select {
                 <h5 class="card-title">{{value.title}} </h5>
                 <h6 class="card-subtitle mb-2 text-muted">{{value.topic }}</h6>
                 <p class="card-text">
-                  {{value.content.0}}
+                  {{value.content}}
                 </p>
                 {% if value.fileReference != "" %}
                   <a href={{value.fileReference}} class="card-link">File Reference</a>

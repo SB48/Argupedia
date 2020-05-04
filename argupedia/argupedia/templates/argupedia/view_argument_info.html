@@ -40,7 +40,7 @@
               {% include 'argupedia\nav.html' %}
               <div class = "argument-info">
                 <div align="right"> <i> Argument is {{value.labellings}} </i> </div>
-                {% if value.votes is not None and value.selfAttack == False %}
+                {% if value.labellings == "undecided" and value.selfAttack == False %}
                 <div align="right"> <i> Current Votes = {{value.votes}} </i> </div>
                 {% endif %}
                 <div class="container-fluid d-flex p-2 dark-colour">
@@ -48,10 +48,8 @@
                 </div>
                 <div class="container-fluid d-flex p-2">
                   <p class="card-text">
-                    {% for contentText in value.content %}
-                      {{ contentText}}
+                      {{ value.content}}
                       <br>
-                    {% endfor %}
                   </p>
                 </div>
                   <br>
@@ -73,7 +71,7 @@
                         {% endif %}
                     </div>
                   {% endif %}
-                  {% if uid is not None %}
+                  <!-- {% if uid is not None %}
                   <form action="{% url 'critical_questions_page' %}" method="post">
                     {% csrf_token %}
                     <input name="originalKey" type="hidden" value="{{value.originalKey}}"></input>
@@ -88,20 +86,34 @@
                     </select>
                     <input type="submit" class="btn btn-light" value="Add a Critical Question"></input>
                   </form>
-                  {%endif%}
-                  
-                  {% if value.labellings == "undecided" and value.selfAttack == False %}
-                    This argument is undecided. 
-                    If it receives enough votes then it will be considered "winning" over the argument that attacks it. 
-                    Alternatively, you could vote for the other undecided argument
-                    
-                    <br>
-                    
+                  {%endif%} -->
+                  <br>
 
+                  <br>
 
+                  <br>
 
+                  <br>
+                
+                  {% if value.labellings == "undecided" %}
+                  <div class="container-fluid d-flex p-2">
+                    <p class="card-text italic">
 
+                      This argument is undecided. <br>
+                      If it receives enough votes then it will be considered "winning" over the argument that attacks it. <br>
+                      Alternatively, you could vote for the other undecided argument.<br>
+    
+                      {% if uid is None %}
 
+                      <br>
+                      You need to log in to vote.
+
+                      {%else%}
+                      <br>
+                    </p>
+                  </div>
+
+                  <div class="container-fluid d-flex p-2">
                     <form action = "{% url 'vote_argument' %}"  class="form-inline my-2 my-lg-0" method= "post">
                       {% csrf_token %}
                       <input name="originalKey" type="hidden" value="{{value.originalKey}}"></input>
@@ -109,7 +121,11 @@
                       <button type="sumbit" class="btn template-btn mr-sm-2" data-dismiss="modal">Vote For This Argument</button>
                     </form>
 
+                  </div>
+
                   {% endif %}
+                  {% endif %}
+
         
     
         

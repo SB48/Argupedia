@@ -146,11 +146,14 @@ def about_page(request):
 
 #add an argument 
 def add_argument(request):
+    print("argumentType", request.POST.get('argumentType'))
     if request.POST.get('selfAttack') is None:
         selfAttack = False
     else: 
         selfAttack = True
+    contentString = str(request.POST.get('content-1')) + " \n "  + str(request.POST.get('content-2'))  + " \n "  + str(request.POST.get('content-3')) + " \n "  + str(request.POST.get('content-4')) 
     data = {
+        "argumentType": request.POST.get('argumentType'),
         "topic": request.POST.get('topic'),
         "title" : request.POST.get('title'),
         "urlReference": request.POST.get('urlReference'),
@@ -158,7 +161,8 @@ def add_argument(request):
         "image": request.POST.get('image'),
         "argumentType" : request.POST.get('argumentType'), 
         "selfAttack" : selfAttack,
-        "content": [str(request.POST.get('content-1')),str(request.POST.get('content-2')),str(request.POST.get('content-3')),str(request.POST.get('content-4'))],
+        "content": contentString,
+        'votes': 0,
     }
     fileRef =  request.POST.get('fileReference')
     image = request.POST.get('image')
@@ -188,7 +192,7 @@ def create_argument_page(request):
     argumentType = request.POST.get('argumentType')
     argumentFormat = db.return_argumentFormats(argumentType)
     uid = db.return_uid()
-    return render(request, template_name, {"format" : argumentFormat, "uid": uid})
+    return render(request, template_name, {"argumentType": argumentType, "format" : argumentFormat, "uid": uid})
 
 def turn_content_to_list(contentString):
     contentList = contentString.strip('][').split(',')
@@ -203,9 +207,9 @@ def turn_content_to_list(contentString):
 def view_argument_info_page(request):
     uid = db.return_uid()
     template_name = 'argupedia/view_argument_info.html'
-    contentString = request.POST.get('content')
-    content = turn_content_to_list(contentString)
-    print("contentList", content)
+    #contentString = request.POST.get('content')
+    # content = turn_content_to_list(contentString)
+    print("contentList", request.POST.get('content'))
     originalKey = request.POST.get('originalKey')
     argumentKey = request.POST.get('argumentKey')
     votes = db.returnVotes(originalKey, argumentKey)
@@ -215,7 +219,7 @@ def view_argument_info_page(request):
         "votes": votes[1],
         "originalKey" : originalKey,
         "argumentKey" : argumentKey,
-        "content": content,
+        "content": request.POST.get('content'),
         "title" : request.POST.get('title'), 
         "urlReference": request.POST.get('urlReference'),
         "fileReference": request.POST.get('fileReference'),
@@ -228,24 +232,28 @@ def view_arguments_page(request):
     print("")
     print("view arguments page called")
     print("")
-    template_name = 'argupedia/view_arguments.html'
-    argumentTypes = db.return_argumentTypes()
     uid = db.return_uid()
-    argument = db.return_arguments()
-    #temporary for testing! delete up until next comment then uncomment the rest
-    # data = {'-M1GrB2f4w35ZwQVMYUR': {'content': 'have ALL the babies. ALL OF THEM.', 'fileReference': '', 'title': 'abortion sucks bitched', 'topic': 'abortion', 'urlReference': '', 'image': 'https://images.dailykos.com/images/598155/large/abortion-debate.jpg?1539112132' }, '-M1Gzr2YVAaF9dmuzF_7': {'content': 'computer says no', 'fileReference': '', 'title': 'No Brexit for Britain', 'topic': 'Brexit', 'urlReference': '', 'image': 'https://1gb82h2px4rr3s7tp94g0nt1-wpengine.netdna-ssl.com/wp-content/uploads/2019/01/brexitborder.jpg'}}
-    # toReturn = {"uid" : "OjTpCCeALlcGCluPNoWWSj6bS532", "arguments" : data}
-    # return render(request, template_name, toReturn)
-    #end of testing segment!!
-    toReturn = {"uid" : uid, "arguments" : argument, "types": argumentTypes}
-    if (argument):
-        toReturn = {"uid" : uid, "arguments" : argument}
-        print("")
-        print ("views print statement", toReturn)
-        print("")
-        return render(request, template_name, toReturn)
+    template_name = 'argupedia/view_arguments.html'
+    if uid is not None:
+        argumentTypes = db.return_argumentTypes()
+        argument = db.return_arguments()
+        #temporary for testing! delete up until next comment then uncomment the rest
+        # data = {'-M1GrB2f4w35ZwQVMYUR': {'content': 'have ALL the babies. ALL OF THEM.', 'fileReference': '', 'title': 'abortion sucks bitched', 'topic': 'abortion', 'urlReference': '', 'image': 'https://images.dailykos.com/images/598155/large/abortion-debate.jpg?1539112132' }, '-M1Gzr2YVAaF9dmuzF_7': {'content': 'computer says no', 'fileReference': '', 'title': 'No Brexit for Britain', 'topic': 'Brexit', 'urlReference': '', 'image': 'https://1gb82h2px4rr3s7tp94g0nt1-wpengine.netdna-ssl.com/wp-content/uploads/2019/01/brexitborder.jpg'}}
+        # toReturn = {"uid" : "OjTpCCeALlcGCluPNoWWSj6bS532", "arguments" : data}
+        # return render(request, template_name, toReturn)
+        #end of testing segment!!
+        toReturn = {"uid" : uid, "arguments" : argument, "types": argumentTypes}
+        if (argument):
+            toReturn = {"uid" : uid, "arguments" : argument}
+            print("")
+            print ("views print statement", toReturn)
+            print("")
+            return render(request, template_name, toReturn)
+        else:
+            return render(request, template_name, {"uid" : uid, "arguments": None, "types": argumentTypes})
     else:
-        return render(request, template_name, {"uid" : uid, "arguments": None, "types": argumentTypes})
+        return render(request, template_name, {"uid" : uid, "arguments": None, "types": None})
+
 
 # def view_argument_content(request):
 #     originalKey = request.POSt.get("originalKey")
@@ -342,7 +350,7 @@ def critical_questions_page(request):
     key = request.POST.get('key')
     originalKey = request.POST.get('originalKey')
     uid = db.return_uid()
-    criticalQuestions = db.return_criticalQuestions(key)
+    criticalQuestions = db.return_criticalQuestions(key, originalKey)
     context = {"uid": uid, "topic": topic, "key": key, "originalKey": originalKey, "criticalQuestions": criticalQuestions, "argumentType": argumentType, "format" : argumentFormat}
     template_name = 'argupedia/critical_questions.html'
     #testing values: @@@@@@@@@@@@
@@ -361,6 +369,7 @@ def add_attack(request):
     uid = db.return_uid()
     print("called add attack in views")
     originalKey = request.POST.get('originalKey')
+    print("argument type", request.POST.get('argumentType'))
     print("original key", originalKey)
     if request.POST.get('alternate') is None:
         alternate = False
@@ -375,9 +384,10 @@ def add_attack(request):
     # attackingKeys =  {}
     # for element in request.POST.get('attackingKey'):
     #     attackingKeys[element] = "attacking"
+    contentString = contentString = str(request.POST.get('content-1')) + " \n "  + str(request.POST.get('content-2'))  + " \n "  + str(request.POST.get('content-3')) + " \n "  + str(request.POST.get('content-4')) 
     data = {
         "title" : request.POST.get('title'),
-        "content": [str(request.POST.get('content-1')),str(request.POST.get('content-2')),str(request.POST.get('content-3')),str(request.POST.get('content-4'))],
+        "content": contentString,
         "urlReference": request.POST.get('urlReference'),
         "fileReference": request.POST.get('fileReference'),
         "image": request.POST.get('image'),
@@ -387,13 +397,14 @@ def add_attack(request):
         "originalKey": originalKey,
         "attackedBy": "",
         "alternate" : alternate,
-        "selfAttack": selfAttack
+        "selfAttack": selfAttack, 
+        "votes": 0,
     }
 
     print ("checkbox return value, ", data["alternate"])
     fileRef =  request.POST.get('fileReference')
     image = request.POST.get('image')
-    passCheck = db.add_attack(data, originalKey, fileRef, image)
+    passCheck = db.add_attack(data, originalKey, fileRef, image, [request.POST.get('attackingKey')] )
     if passCheck is None: 
         context = {"message": "Error", "uid": uid}
         template_name = 'argupedia/create_argument.html'
