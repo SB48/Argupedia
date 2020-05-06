@@ -3,11 +3,6 @@
 {% load static %}
 
 
-
-<link rel="stylesheet" type="text/scss" href="{% static 'static/nav.scss' %}">
-<link rel="stylesheet" type="text/scss" href="{% static 'static/navbar.scss' %}">
-<link rel="stylesheet" type="text/css" href="{% static '/navbar.css' %}">
-
 <head>
     <link rel="stylesheet" 
     href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" 
@@ -79,7 +74,7 @@
 
     
 </style>
-<!-- reference: https://color.adobe.com/explore?page=3 
+<!-- reference for overall website colour palette: https://color.adobe.com/explore?page=3 
   https://color.adobe.com/explore?page=2
 -->
 
@@ -102,7 +97,6 @@
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <a class="dropdown-item" href="{% url 'view_arguments_page' %}"><div class = "text"> View your arguments</div></a>
-                <!-- <div class="dropdown-divider"></div> -->
                 <a class="dropdown-item" href="{% url 'search_argument_page' %}"><div class = "text"> Start a debate</div></a>
             </div>
           </li>
