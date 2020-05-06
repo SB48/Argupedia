@@ -1,6 +1,4 @@
 
-      <!-- Modal -->
-      {% load django_popup_view_field_tags %}
 
       {% block content %}
 
@@ -71,22 +69,6 @@
                         {% endif %}
                     </div>
                   {% endif %}
-                  <!-- {% if uid is not None %}
-                  <form action="{% url 'critical_questions_page' %}" method="post">
-                    {% csrf_token %}
-                    <input name="originalKey" type="hidden" value="{{value.originalKey}}"></input>
-                    <input name="key" type="hidden" value="{{value.argumentKey}}"></input>
-                    <input name="topic" type="hidden" value="{{value.topic}}"></input>
-                    <select id="argumentType" name="argumentType">
-                      {% for type, description in types.items %}
-                      <option value="{{type}}">
-                          {{description}}
-                      </option>
-                      {% endfor %}
-                    </select>
-                    <input type="submit" class="btn btn-light" value="Add a Critical Question"></input>
-                  </form>
-                  {%endif%} -->
                   <br>
 
                   <br>
